@@ -4,9 +4,9 @@
 - WYSIWYG HTML Editor.
 - Drag and drop handling support.
 - One Tree data structure ( inspired by editors.js )
-- Easy customise content module. 
+- Easy customization for content module. 
     - It's just Vue application. So, you don't need to learn anything to customize it.
-    - **Any Vue components you have can be used.**
+    - **Any Vue components you have can be used as content.**
 - If you have enough Vue components, you can use this as CMS.
  
 ## Notice
