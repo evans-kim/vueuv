@@ -278,6 +278,9 @@ export default {
       this.value.contents = val;
       this.$emit('input', this.value)
       this.isSorting = false;
+    },
+    updateValue(val){
+      this.$emit('input', val);
     }
   },
   created() {
@@ -301,7 +304,7 @@ export default {
 }
 
 .is-selected:before, .is-editable:before {
-  content: attr(data-title)'#'attr(data-id);
+  content: attr(data-title);
   position: absolute;
   left: -2px;
   top: -20px;

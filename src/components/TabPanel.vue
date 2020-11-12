@@ -108,7 +108,22 @@ export default {
       }
     },
     addContents() {
-
+      // 컨덴츠가 없다면
+      if( !this.getTargetComponent.value.contents ){
+        let data = this.getTargetComponent.value;
+        data = {
+          tag: 'div',
+          id: createUid(),
+          class:['p-2'],
+          contents:[
+            data
+          ]
+        }
+        this.getTargetComponent.updateValue(data)
+        console.log(data);
+        this.$store.commit('setToggleEditorMode', {key: 'showGrid', value: true})
+        return ;
+      }
       this.$set(this.getTargetComponent.value.contents, this.getTargetComponent.value.contents.length, {
         tag: 'div',
         id: createUid(),

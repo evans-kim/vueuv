@@ -1,26 +1,22 @@
 <template>
   <div id="app" class="relative bg-gray-200 min-h-screen">
-    <div class="w-full p-4">
+    <div class="w-full p-4 bg-white shadow-outline shadow mb-4">
+      <h4>Contents</h4>
       <menubar></menubar>
     </div>
-    <div class="flex items-stretch">
-      <div ref="renderer" class="min-h-screen w-full">
-
-        <div id="document-editor" class="relative w-full" :class="editorClass" @drop="addContent" @dragover.prevent>
-          <content-render v-model="doc" />
-        </div>
-        <layout-helper :document="doc"></layout-helper>
-        <div class="flex m-2 p-2 bg-white shadow border rounded">
-          <h2></h2>
-          <div class="whitespace-pre">
-            {{ doc }}
-          </div>
-
+    <div ref="renderer" class="min-h-screen w-full">
+      <h4>Editor</h4>
+      <div id="document-editor" class="relative w-full" :class="editorClass" @drop="addContent" @dragover.prevent>
+        <content-render v-model="doc" />
+      </div>
+      <div class="flex m-2 p-2 bg-white shadow border rounded">
+        <div class="whitespace-pre">
+          {{ doc }}
         </div>
       </div>
     </div>
-
     <content-style :value="doc"></content-style>
+    <layout-helper :document="doc"></layout-helper>
   </div>
 </template>
 <script>
@@ -49,22 +45,36 @@ export default {
       doc: {
 
         tag: 'div',
-        class: ['p-2'],
+        class: ['p-2', 'm-2','flex','justify-around'],
         id: 'test-main-layout',
-        cssText: '#test-main-layout{ background: #e1e2e3; }',
+        cssText: '#test-main-layout{ background: white; }',
         contents: [
           {
             tag: 'text-content',
             class: ['p-2'],
             props: {
-              value: '새로운 텍스트 에디터 -1',
+              value: '새로운 텍스트',
             }
           },
           {
             tag: 'text-content',
             class: ['p-2'],
             props: {
-              value: '새로운 텍스트 에디터 -6',
+              value: '새로운 텍스트',
+            }
+          },
+          {
+            tag: 'text-content',
+            class: ['p-2'],
+            props: {
+              value: '새로운 텍스트',
+            }
+          },
+          {
+            tag: 'text-content',
+            class: ['p-2'],
+            props: {
+              value: '새로운 텍스트',
             }
           }
         ]

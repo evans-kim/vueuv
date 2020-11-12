@@ -1,6 +1,6 @@
 <template>
   <transition name="fade-in-out" mode="out-in">
-    <div v-if="isLayoutComponent" v-show="!isSorting" :style="getStyle" >
+    <div v-if="isLayoutComponent" v-show="!isSorting" :style="getStyle">
       <tab-panel/>
     </div>
   </transition>
@@ -71,6 +71,7 @@ export default {
         position: 'fixed',
         padding: '0.5rem',
         left: 0,
+        right:'auto',
         top: 0,
         zIndex: 10
       }
@@ -88,17 +89,24 @@ export default {
       const rect = element.getBoundingClientRect();
 
       this.getStyle.left = rect.x + 'px';
+      this.getStyle.right = 'auto';
       this.getStyle.top = rect.y + rect.height + 10 + 'px';
       this.getStyle.display = 'flex'
 
       this.$nextTick(()=>{
         const me = this.$el.getBoundingClientRect();
         // 화면을 왼쪽으로 넘어 간다면?
-        const number = window.innerWidth - ( me.x + me.width ) - 12;
+        const number = window.innerWidth - ( me.x + me.width ) - 100;
         if( number < 0 ){
-          this.getStyle.left = parseInt(this.getStyle.left) + number +'px';
+          this.getStyle.left = "auto";
+          this.getStyle.right = '20px';
+        }else{
+          this.getStyle.right = 'auto';
         }
       });
+    },
+    hideOnScroll(e) {
+      console.log(e, e.target);
     }
   }
 }
