@@ -20,6 +20,7 @@ import ContentContainer from "@/Contents/ContentContainer";
 import AppAccess from "@/mixins/AppAccess";
 import HrefContent from "@/Contents/HrefContent";
 import NavBarContent from "@/Contents/NavBarContent";
+import FlexBoxContent from "@/Contents/FlexBoxContent";
 export default {
   name: 'Contents',
   mixins:[
@@ -31,7 +32,8 @@ export default {
         BasicContent,
         ContentContainer,
         HrefContent,
-        NavBarContent
+        NavBarContent,
+        FlexBoxContent
       ]
     }
   },

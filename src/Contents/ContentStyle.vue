@@ -1,30 +1,26 @@
 <template>
   <component :is="'style'" type="text/css">
-    <template v-for="style in getContentStyles">
-      {{ style.selector }} {
-        {{ CssPropertyToText(style.property) }}
-      }
-    </template>
+    {{ parseContentStyles(value) }}
   </component>
 </template>
 
 <script>
+import _ from 'lodash';
 export default {
   name: "ContentStyle",
-  computed: {
-    /**
-     *
-     * @returns {ContentStyle}
-     */
-    getContentStyles() {
-      return this.$store.getters.getStyles;
+  props: {
+    value: {
+      type: Object
     }
   },
-  methods:{
-    CssPropertyToText(style){
-      return Object.keys(style).map(prop => {
-        return prop.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`) + ` : ${style[prop]};`
-      }).join("\n")
+  methods: {
+    parseContentStyles(obj) {
+      const css =_.flatMapDeep(obj.contents, (o)=>{
+        return o.cssText || null;
+      })
+
+      return [obj.cssText, ...css].filter(i=>i).join("\n\n");
+
     }
   }
 }

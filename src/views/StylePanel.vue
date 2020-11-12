@@ -30,19 +30,6 @@ export default {
   },
 
   methods: {
-    handler(key, val) {
-      let target = key;
-      let value = val;
-      if(Array.isArray(key)){
-        const obj = this.getProp[key[0]]
-        target = key[0]
-        obj[key[1]] = val;
-        value = obj;
-      }
-
-      this.$store.commit('setStyle', {target, value})
-
-    },
     addStyle({selector, property}) {
       this.$store.commit('setStyle', {selector, property})
     }

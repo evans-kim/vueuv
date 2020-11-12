@@ -1,4 +1,16 @@
-# builder
+# Vutiliter (Vue + Utility + builder )
+
+## Feature 
+- WYSIWYG HTML Editor.
+- Drag and drop handling support.
+- One Tree data structure ( inspired by editors.js )
+- Easy customise content module. 
+    - It's just Vue application. So, you don't need to learn anything to customize it.
+    - **Any Vue components you have can be used.**
+- If you have enough Vue components, you can use this as CMS.
+ 
+## Notice
+- It's beta version. So, any interface, code can be changed. 
 
 ## Project setup
 ```
@@ -15,15 +27,5 @@ npm run serve
 npm run build
 ```
 
-### Run your unit tests
-```
-npm run test:unit
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+##Licence
+MIT

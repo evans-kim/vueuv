@@ -1,50 +1,61 @@
 <template>
-  <component ref="contentBody"
-             v-if="isRenderObject"
-             :data-title="getTag"
-             @dblclick="activeContent" @click="focusContent" @mouseover="selectContent"
-             :is="getTag" v-bind.sync="value.props"
-             :class="getClass"
-             :style="(!isSimpleText) ? value.style : {}">
-    <draggable v-if="value.contents && value.contents.length > 0" tag="div"
-               :style="(isSimpleText) ? value.style : {}"
-               :class="(isSimpleText) ? value.class : {}"
-               v-model="value.contents" group="content-sort" animation="200" ghost-class="ghost"
-               @start="isSorting = true" @end="isSorting = false">
-      <content-render v-for="(child,idx) in value.contents" :value="child"
-                      @input="(val)=>{ value.contents[idx]=val; }"
-                      :key="idx"
-      ></content-render>
-    </draggable>
-  </component>
-  <div v-else ref="contentBody" :data-title="getTag" @dblclick="activeContent" @click="focusContent" @mouseover="selectContent"
-       v-html="value"
-       @blur="blurHandler"
-       :contenteditable="isEditable"
-       :class="getClass">
+  <div :data-title="getTag"
+       :data-id="getUid"
+       style="position: relative"
+       :class="selectorClass"
+       @dblclick="activeContent"
+       @click="focusContent"
+       @mouseover="selectContent">
+    <template v-if="value.contents && value.hasOwnProperty('contents')">
+      <draggable tag="div"
+                 :data-title="getTag"
+                 :data-id="getUid"
+                 data-type="sorter"
+                 :style=" value.style || {}"
+                 class="transitional"
+                 :id="getUid"
+                 :class=" getClass "
+                 :value="value.contents"
+                 @input="updateContents"
+                 group="content-render" animation="200" ghost-class="ghost"
+                 @start="()=>{isSorting = true;}" @end="()=>{isSorting = false;}">
+        <content-render v-for="(child,idx) in value.contents"
+                        :value="child"
+                        :parent="value"
+                        @input="(val)=>{ value.contents[idx]=val; }"
+                        :key="idx"
+        ></content-render>
+      </draggable>
+    </template>
+    <template v-else-if="isRenderObject">
+      <component ref="content"
+                 :is="getTag"
+                 :data-title="getTag"
+                 :data-id="getUid"
+                 :id="getUid"
+                 :key="getUid"
+                 v-bind.sync="value.props"
+                 :class="getClass"
+                 :style="value.style || {}">
+      </component>
+    </template>
   </div>
 </template>
 <script>
-import AppAccess from "@/mixins/AppAccess";
+import Store from "@/lib/StoreSelector";
+import CodeEditor from "@/components/CodeEditor";
+import createUniqueId from "@/lib/createUniqueId";
 
 export default {
   name: 'ContentRender',
-  mixins: [
-    AppAccess
-  ],
+  components: {CodeEditor},
   props: {
     value: {
       type: [Object, String],
       required: true
-    }
-  },
-  watch:{
-    isEditable(val){
-      if(this.isSimpleText){
-        this.$nextTick(()=>{
-          this.$el.focus();
-        })
-      }
+    },
+    parent: {
+      type: Object
     }
   },
   data() {
@@ -54,114 +65,230 @@ export default {
     }
   },
   computed: {
-    isSimpleText(){
-      return this.getTag === 'text'
+
+    dragComponent: {
+      get: function () {
+        return Store.dragComponent;
+      },
+      set: function (component) {
+        Store.dragComponent = component;
+      }
+    },
+    selectedContent: {
+      get: function () {
+        return Store.selectedContent;
+      },
+      set: function (component) {
+        if (this.isDragging) {
+          return false;
+        }
+        Store.selectedContent = component;
+      }
+    },
+    focusedContent: {
+      get: function () {
+        return Store.focusedContent;
+      },
+      set: function (component) {
+        if (this.isDragging) {
+          return false;
+        }
+        Store.focusedContent = component;
+      }
+    },
+    isSorting: {
+      get: function () {
+        return Store.isSorting;
+      },
+      set: function (value) {
+        Store.isSorting = value;
+      }
+    },
+    editingContent: {
+      get() {
+        return Store.editingContent || null;
+      },
+      set(val) {
+        Store.editingContent = val;
+      }
+    },
+    selectedElement: {
+      get: function () {
+        return Store.selectedElement;
+      },
+      set: function (component) {
+        if (this.isDragging) {
+          return false;
+        }
+        Store.selectedElement = component;
+      }
     },
     isRenderObject() {
       return typeof this.value === 'object' && this.value.tag
     },
-    isEditable() {
-      return this.editingContent && this.editingContent.uid === this.getUid;
-    },
-    isFocused() {
-      return this.focusedContent && this.focusedContent.uid === this.getUid;
-    },
-    isSorted() {
-      return this.isSorting
-    },
-    isSelected() {
-      if (this.isFocused) {
-        return true;
+    selectorClass(){
+      const classes = [];
+      if( this.isEditing){
+        classes.push('is-editable');
       }
-      return this.selectedContent && this.selectedContent.uid === this.getUid;
+      if( this.isSelectedContent || this.isFocusedContent){
+        classes.push('is-selected');
+      }
+      if( this.isLabelBottom){
+        classes.push('label-bottom');
+      }
+      return classes;
     },
     getClass() {
-      return Object.assign({
-        'is-editable': this.isEditable,
-        'is-selected': this.isSelected,
-        'label-bottom' : this.isLabelBottom
-      }, this.value.class || {}) || {}
+      return [ ...this.value.class];
     },
     getTag() {
       return this.value.tag || 'text';
     },
-    showLabel() {
-      return this.isSelected  || this.isFocused || this.isEditable
-    }
+    contentId() {
+      return this.value.id;
+    },
+    isDragging() {
+      return !!this.dragComponent
+    },
+    isSelectedContent() {
+      return this.selectedContent === this.contentId
+    },
+    isFocusedContent() {
+      return this.focusedContent && this.focusedContent.component === this;
+    },
+    isEditing() {
+      if (!this.editingContent) {
+        return false
+      }
+      return this.editingContent && this.editingContent.component === this;
+
+    },
+    getUid() {
+      return this.value.id;
+    },
+    getContent() {
+      return this.$refs['content']
+    },
   },
   methods: {
     setUid() {
-      this.uid = Math.random().toString(36).substr(2, 9);
+      if (!this.value.id) {
+        this.$set(this.value, 'id', this.createUid())
+      }
+    },
+    deleteContent(){
+
+      if(!this.parent){
+        console.warn('Root cannot be removed');
+        return false;
+      }
+      this.parent.contents = this.parent.contents.filter((content)=>{
+        return content.id !== this.value.id;
+      });
+    },
+    getDataIdFrom(event) {
+      return event.target.getAttribute('data-id');
+    },
+    /**
+     *
+     * @param {HTMLElement} element
+     */
+    getParentContentRender(element) {
+
+      const parent = element.parentNode;
+      if (!parent) {
+        return null;
+      }
+      if (parent !== this.$el) {
+        return this.getParentContentRender(parent);
+      } else {
+        return this.$el;
+      }
+    },
+    selectContent(event) {
+
+      if (!event.target !== this.$el) {
+        const parentContentRender = this.getParentContentRender(event.target);
+
+        if (parentContentRender) {
+          this.selectedContent = parentContentRender.getAttribute('data-id');
+          event.stopPropagation();
+          return;
+        }
+      }
+      if (this.$store.getters.isSorting) {
+        return false;
+      }
+
+      this.selectedContent = this.getDataIdFrom(event);
+
+      this.$nextTick(() => {
+        this.labelStyle();
+      });
+
+      event.stopPropagation();
+    },
+    activeContent(e) {
+      if (this.isEditing) {
+        this.unsetEditingContent()
+        e.stopPropagation();
+        return;
+      }
+      this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+      if (this.$refs['content'] && this.$refs['content'].enableEdit) {
+        this.$refs['content'].enableEdit();
+      }
+      this.setEditingContent()
+      e.stopPropagation();
+    },
+    unsetEditingContent() {
+      const component = this.editingContent.component;
+      if (component.$refs['content'] && component.$refs['content'].disableEdit) {
+        component.$refs['content'].disableEdit(this);
+      }
+      this.$store.commit('resetEditingContent');
+    },
+    setEditingContent() {
+
+      this.$store.commit('setEditingContent', {id:this.getUid, component:this})
+    },
+    focusContent(e) {
+      // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
+      if ( this.editingContent && !this.isEditing) {
+        this.focusedContent = null;
+        this.selectedContent = null;
+        this.unsetEditingContent();
+      }
+      if (this.isFocusedContent) {
+        this.focusedContent = null;
+      } else {
+        this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+      }
+      e.stopPropagation();
+    },
+    createUid() {
+      return createUniqueId();
     },
     labelStyle() {
       const rect = this.$el.getBoundingClientRect();
       this.isLabelBottom = rect.y < 20;
     },
-    selectContent(event) {
-      if (this.$store.getters.isSorting) {
-        return false;
-      }
-      this.selectedContent = {uid: this.getUid, node: this};
-
-      this.$nextTick(() => {
-         this.labelStyle();
-      });
-
-      event.stopPropagation();
-    },
-    inputHandler(e) {
-      const data = e.target.innerHTML;
-      this.$emit('input', data);
-    },
-    unFocusContent(e) {
-      this.inputHandler(e);
-      this.focusedContent = null;
-      this.editingContent = null;
-    },
-    inactiveContent(e){
-      const data = e.target.innerHTML;
-      this.$emit('input', data);
-      this.editingContent = null;
-    },
-    activeContent(e) {
-      if (this.isEditable) {
-        this.editingContent = null;
-        e.stopPropagation();
-        return;
-      }
-      this.$nextTick(() => {
-
-        if (this.$refs['contentBody'].setEditable) {
-          this.$refs['contentBody'].setEditable();
-        }
-        if (!this.$refs['contentBody'].$el) {
-          this.setEditable();
-        }
-      })
-      e.stopPropagation();
-    },
-    setEditable(){
-      this.editingContent = {uid:this.getUid, node : this};
-    },
-    focusContent(e) {
-      if(this.editingContent && !this.isEditable){
-        this.editingContent = null;
-      }
-      if(this.isFocused){
-        this.focusedContent = null;
-      }else{
-        this.focusedContent = {uid: this.getUid, node: this};
-      }
-      e.stopPropagation();
-    },
-    blurHandler(e) {
-      this.$emit('input', e.target.innerHTML);
+    updateContents(val) {
+      this.value.contents = val;
+      this.$emit('input', this.value)
+      this.isSorting = false;
     }
+  },
+  created() {
+    this.setUid();
   }
 }
 </script>
 <style lang="scss" scoped>
-
+.transitional{
+  transition: all ease-in-out 0.3ms;
+}
 .ghost {
   background-color: #e1e2e3;
   opacity: .5;
@@ -172,8 +299,9 @@ export default {
   outline: #42b983 2px solid;
   display: flow-root;
 }
-.is-selected:before, .is-editable:before{
-  content: attr(data-title);
+
+.is-selected:before, .is-editable:before {
+  content: attr(data-title)'#'attr(data-id);
   position: absolute;
   left: -2px;
   top: -20px;
@@ -183,15 +311,18 @@ export default {
   padding: 2px 6px;
   z-index: 100;
 }
-.is-selected.label-bottom:before{
+
+.is-selected.label-bottom:before {
   left: -2px;
   top: unset !important;
   bottom: -20px !important;
 }
-.is-editable{
+
+.is-editable {
   outline: orange 2px solid;
 }
-.is-editable:before{
+
+.is-editable:before {
   background-color: orange !important;
 }
 
