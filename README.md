@@ -1,4 +1,4 @@
-# Vutiliter (Vue + Utility + builder )
+# VUEUV : Vue User-friendly Editor Used only Vue
 
 ## Feature 
 - WYSIWYG HTML Editor.

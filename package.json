@@ -1,6 +1,6 @@
 {
-  "name": "builder",
-  "version": "0.1.0",
+  "name": "vueuv",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
