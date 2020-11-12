@@ -8,7 +8,7 @@
               class="rounded border mr-1 bg-white shadow p-2 focus:outline-none">스타일
       </button>
       <button :class="activeClass('controller')" @click="activeTab = 'controller';"
-              class="rounded border mr-1 bg-white shadow p-2 focus:outline-none">컨트롤
+              class="rounded border mr-1 bg-white shadow p-2 focus:outline-none">레이아웃
       </button>
       <btn @click.stop="addContents"><i class="icofont icofont-sub-listing"></i></btn>
       <btn color="orange" @click.stop="deleteContents"><i class="icofont icofont-delete"></i></btn>
@@ -49,18 +49,19 @@
 <script>
 import ClassTagInput from "@/components/ClassTagInput";
 import CodeEditor from "@/components/CodeEditor";
-import Store from "@/lib/StoreSelector";
+import Btn from "@/components/Btn";
 import createUid from "@/lib/createUniqueId";
 
 export default {
   name: "TabPanel",
-  components: {CodeEditor, ClassTagInput},
+  components: {CodeEditor, ClassTagInput, Btn},
+  inject:['$editor'],
   props: {
     title: String,
   },
   computed: {
     getTargetComponent() {
-      return (Store.focusedContent) ? Store.focusedContent.component : null;
+      return (this.$editor.states.focusedContent) ? this.$editor.states.focusedContent.component : null;
     },
     getTargetClasses() {
       return this.getTargetComponent.value.class || []
@@ -120,8 +121,7 @@ export default {
           ]
         }
         this.getTargetComponent.updateValue(data)
-        console.log(data);
-        this.$store.commit('setToggleEditorMode', {key: 'showGrid', value: true})
+        this.$editor.config.showGrid = true;
         return ;
       }
       this.$set(this.getTargetComponent.value.contents, this.getTargetComponent.value.contents.length, {
@@ -130,7 +130,8 @@ export default {
         class: ['p-2'],
         contents: []
       });
-      this.$store.commit('setToggleEditorMode', {key: 'showGrid', value: true})
+
+      this.$editor.config.showGrid = true;
 
     },
     deleteContents() {

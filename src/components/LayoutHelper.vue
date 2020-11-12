@@ -7,17 +7,12 @@
 </template>
 
 <script>
-import Store from "@/lib/StoreSelector";
 import TabPanel from "@/components/TabPanel";
 
 export default {
   name: "LayoutHelper",
-  components: { TabPanel},
-  props: {
-    document: {
-      type: Object
-    }
-  },
+  inject:['$editor'],
+  components: {TabPanel},
   watch: {
     contentFocused(element) {
       if (!this.isLayoutComponent) {
@@ -33,27 +28,29 @@ export default {
       }
       this.$nextTick(()=>{
         setTimeout(()=>{
-          this.setPosition(this.contentFocused.component.$el)
+          if(this.contentFocused)
+            this.setPosition(this.contentFocused.component.$el)
         }, 300)
       });
     },
     isSorting(val){
       this.$nextTick(()=>{
         setTimeout(()=>{
-          this.setPosition(this.contentFocused.component.$el)
+          if(this.contentFocused)
+            this.setPosition(this.contentFocused.component.$el)
         }, 100)
       });
     }
   },
   computed: {
     getEditorMode(){
-      return this.$store.getters.getEditorMode.showGrid || this.$store.getters.isSorting;
+      return this.$editor.config.showGrid || this.$editor.states.isSorting;
     },
     contentFocused() {
-      return Store.focusedContent;
+      return this.$editor.states.focusedContent;
     },
     isSorting(){
-      return Store.isSorting;
+      return this.$editor.states.isSorting;
     },
     getTargetComponent(){
       return (this.contentFocused) ? this.contentFocused.component : null;

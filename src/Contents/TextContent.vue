@@ -51,7 +51,7 @@ import 'tinymce/plugins/help';
 import 'tinymce/plugins/charmap';
 import 'tinymce/plugins/quickbars';
 import 'tinymce/plugins/autoresize';
-let editor = null;
+
 
 export default {
   name: "TextContent",
@@ -61,6 +61,7 @@ export default {
     }
   },
   data(){
+    this.editor = null;
     return {
       contentId : null
     }
@@ -70,16 +71,18 @@ export default {
       this.loadEditor();
     },
     disableEdit(){
-      this.$emit('update:value', editor.getContent() );
-      editor = null;
+      this.$emit('update:value', this.editor.getContent() );
+      this.editor.hide();
     },
     async loadEditor(){
-      if(editor){
-        editor.show();
+      if(this.editor){
+        this.editor.show();
         return;
       }
+      const id = this.$el.getAttribute('id');
+
       const editors = await tinymce.init( {
-        selector: '#'+this.getEditorId,
+        selector: '#'+id,
         menubar: false,
         inline: true,
         plugins: [
@@ -95,17 +98,13 @@ export default {
         inline_styles : true
         //content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
       });
-
-      editor = editors[0];
+      console.log(editors)
+      this.editor = editors[0];
     }
   },
   computed: {
-    getEditor(){
-      return tinymce.get(this.getEditorId);
-    },
     getEditorId(){
-      console.log('text-content-'+this.value.id);
-      return 'text-content-'+this.value.id;
+      return this.value.id || this._uid;
     }
   }
 }

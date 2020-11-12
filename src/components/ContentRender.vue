@@ -1,6 +1,7 @@
 <template>
   <div :data-title="getTag"
        :data-id="getUid"
+       data-type="selector"
        style="position: relative"
        :class="selectorClass"
        @dblclick="activeContent"
@@ -39,16 +40,21 @@
                  :style="value.style || {}">
       </component>
     </template>
+    <template v-else-if="isStringType">
+      {{ value }}
+    </template>
   </div>
 </template>
 <script>
-import Store from "@/lib/StoreSelector";
+
 import CodeEditor from "@/components/CodeEditor";
 import createUniqueId from "@/lib/createUniqueId";
+import Draggable from 'vuedraggable';
 
 export default {
   name: 'ContentRender',
-  components: {CodeEditor},
+  components: {CodeEditor, Draggable:Draggable},
+  inject: ['$editor'],
   props: {
     value: {
       type: [Object, String],
@@ -65,62 +71,59 @@ export default {
     }
   },
   computed: {
-
-    dragComponent: {
-      get: function () {
-        return Store.dragComponent;
-      },
-      set: function (component) {
-        Store.dragComponent = component;
-      }
+    /**
+     * @return {EditorStates}
+     * */
+    getState(){
+      return this.$editor.states;
     },
     selectedContent: {
       get: function () {
-        return Store.selectedContent;
+        return this.getState.selectedContent;
       },
       set: function (component) {
         if (this.isDragging) {
           return false;
         }
-        Store.selectedContent = component;
+        this.getState.selectedContent = component;
       }
     },
     focusedContent: {
       get: function () {
-        return Store.focusedContent;
+        return this.getState.focusedContent;
       },
       set: function (component) {
         if (this.isDragging) {
           return false;
         }
-        Store.focusedContent = component;
+        this.getState.focusedContent = component;
       }
     },
     isSorting: {
       get: function () {
-        return Store.isSorting;
+        return this.getState.isSorting;
       },
       set: function (value) {
-        Store.isSorting = value;
+        this.getState.isSorting = value;
       }
     },
     editingContent: {
       get() {
-        return Store.editingContent || null;
+        return this.getState.editingContent || null;
       },
       set(val) {
-        Store.editingContent = val;
+        this.getState.editingContent = val;
       }
     },
     selectedElement: {
       get: function () {
-        return Store.selectedElement;
+        return this.getState.selectedElement;
       },
       set: function (component) {
         if (this.isDragging) {
           return false;
         }
-        Store.selectedElement = component;
+        this.getState.selectedElement = component;
       }
     },
     isRenderObject() {
@@ -136,6 +139,9 @@ export default {
       }
       if( this.isLabelBottom){
         classes.push('label-bottom');
+      }
+      if( this.$editor.config.showGrid ){
+        classes.push('show-guide');
       }
       return classes;
     },
@@ -170,9 +176,15 @@ export default {
     getContent() {
       return this.$refs['content']
     },
+    isStringType() {
+      return typeof this.value === 'string';
+    }
   },
   methods: {
     setUid() {
+      if(this.isStringType){
+        return ;
+      }
       if (!this.value.id) {
         this.$set(this.value, 'id', this.createUid())
       }
@@ -217,7 +229,7 @@ export default {
           return;
         }
       }
-      if (this.$store.getters.isSorting) {
+      if (this.getState.isSorting) {
         return false;
       }
 
@@ -247,11 +259,10 @@ export default {
       if (component.$refs['content'] && component.$refs['content'].disableEdit) {
         component.$refs['content'].disableEdit(this);
       }
-      this.$store.commit('resetEditingContent');
+      this.getState.editingContent = null;
     },
     setEditingContent() {
-
-      this.$store.commit('setEditingContent', {id:this.getUid, component:this})
+      this.getState.editingContent = {id:this.getUid, component:this};
     },
     focusContent(e) {
       // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
@@ -300,7 +311,7 @@ export default {
 .is-selected, .is-editable {
   position: relative;
   outline: #42b983 2px solid;
-  display: flow-root;
+
 }
 
 .is-selected:before, .is-editable:before {
@@ -329,4 +340,13 @@ export default {
   background-color: orange !important;
 }
 
+.show-guide *[data-type='sorter'] {
+  outline: 1px dashed #606060;
+  padding: 1rem;
+  transition: all ease-in-out 300ms;
+}
+
+.hide-guide *[data-type='sorter'] {
+  transition: all ease-in-out 300ms;
+}
 </style>

@@ -12,18 +12,27 @@
       > {{ block.label }}
       </div>
     </draggable>
-    <button class="bg-white p-2 shadow-md border inline-block outline-none shadow-md" @click="toggleGrid">
+    <btn @click="toggleGrid">
       <i class="icofont-2x icofont-eye"></i>
-    </button>
+    </btn>
+    <btn @click="exportEditor">
+      <i class="icofont-2x icofont-save"></i>
+    </btn>
   </div>
 </template>
 
 <script>
 import createUid from "@/lib/createUniqueId";
-import StoreSelector from "@/lib/StoreSelector";
+import Btn from "@/components/Btn";
 import _ from "lodash"
+import Draggable from 'vuedraggable';
+
 export default {
   name: "Menubar",
+  inject:['$editor'],
+  components:{
+    Btn, Draggable
+  },
   data() {
     return{
       blocks : [
@@ -41,22 +50,28 @@ export default {
   computed:{
     isSorting:{
       get(){
-        return StoreSelector.isSorting
+        return this.$editor.states.isSorting
       },
       set(val){
-        StoreSelector.isSorting = val;
+        this.$editor.states.isSorting = val;
       }
     }
   },
   methods: {
     toggleGrid() {
-      const now = this.$store.getters.getEditorMode.showGrid;
-      this.$store.commit('setToggleEditorMode', {key: 'showGrid', value: !now})
+      this.$editor.config.showGrid = !this.$editor.config.showGrid;
     },
     addContent(value) {
       const cloneDeep = _.cloneDeep(value);
       cloneDeep.id = createUid();
       return cloneDeep;
+    },
+    exportEditor() {
+      if(this.$editor.config.mode==='editable'){
+        this.$editor.showRawCode();
+      }else{
+        this.$editor.config.mode = 'editable';
+      }
     }
   }
 }
