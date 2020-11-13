@@ -8,6 +8,7 @@
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.6",
     "@types/sortablejs": "^1.10.6",
