@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import _ from 'lodash'
+import * as uniq from 'lodash/uniq'
 export default {
   name: "ClassTagInput",
   props: {
@@ -21,7 +21,7 @@ export default {
   methods: {
     inputHandler(e) {
       const value = e.target.value;
-      this.$emit('input', _.uniq([...this.value, value].filter(item=>item)));
+      this.$emit('input', uniq([...this.value, value].filter(item=>item)));
       e.target.value = '';
 
     },

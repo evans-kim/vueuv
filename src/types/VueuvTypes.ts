@@ -3,12 +3,15 @@
 export interface ContentModel {
     tag: string;
     id?: string;
-    class: string[];
-    cssText: string;
-    props: object;
+    class?: string[];
+    style?: object;
+    cssText?: string;
+    props?: object;
+    attrs?: object;
     contents?: Array<ContentModel>;
 }
 import Vue from 'vue';
+
 interface StatedContentRender{
     id: string;
     component: Vue;

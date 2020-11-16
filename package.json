@@ -1,10 +1,25 @@
 {
-  "name": "vueuv",
+  "name": "@evans-kim/vueuv",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
+  "author": {
+    "email": "evans@kakao.com",
+    "name": "Evans Kim"
+  },
+  "keywords": [
+    "wysiwyg","html-editor","cms","vue","vuejs"
+  ],
+  "license": "MIT",
+  "description": "Vue User-friendly html Editor Used only Vue",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evans-kim/vueuv.git"
+  },
+  "main": "lib/vueuv.umd.min.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "build:plugin": "vue-cli-service build ./src/plugin.ts --dest=lib --target=lib",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },

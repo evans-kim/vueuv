@@ -1,21 +1,24 @@
 <template>
   <component :is="'style'" type="text/css">
-    {{ parseContentStyles(value) }}
+    {{ (rawCss) ? rawCss : parseContentStyles(content) }}
   </component>
 </template>
 
 <script>
-import _ from 'lodash';
+import * as flatMapDeep from 'lodash/flatMapDeep';
 export default {
   name: "ContentStyle",
   props: {
-    value: {
+    content: {
       type: Object
+    },
+    rawCss:{
+      type: String
     }
   },
   methods: {
     parseContentStyles(obj) {
-      const css =_.flatMapDeep(obj.contents, (o)=>{
+      const css = flatMapDeep(obj.contents, (o)=>{
         return o.cssText || null;
       })
 

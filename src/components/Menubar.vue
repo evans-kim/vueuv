@@ -24,7 +24,7 @@
 <script>
 import createUid from "@/lib/createUniqueId";
 import Btn from "@/components/Btn";
-import _ from "lodash"
+import * as clone from "lodash/cloneDeep"
 import Draggable from 'vuedraggable';
 
 export default {
@@ -62,7 +62,7 @@ export default {
       this.$editor.config.showGrid = !this.$editor.config.showGrid;
     },
     addContent(value) {
-      const cloneDeep = _.cloneDeep(value);
+      const cloneDeep = clone(value);
       cloneDeep.id = createUid();
       return cloneDeep;
     },

@@ -1,59 +1,60 @@
-<template>
-  <div :data-title="getTag"
-       :data-id="getUid"
-       data-type="selector"
-       style="position: relative"
-       :class="selectorClass"
-       @dblclick="activeContent"
-       @click="focusContent"
-       @mouseover="selectContent">
-    <template v-if="value.contents && value.hasOwnProperty('contents')">
-      <draggable tag="div"
-                 :data-title="getTag"
-                 :data-id="getUid"
-                 data-type="sorter"
-                 :style=" value.style || {}"
-                 class="transitional"
-                 :id="getUid"
-                 :class=" getClass "
-                 :value="value.contents"
-                 @input="updateContents"
-                 group="content-render" animation="200" ghost-class="ghost"
-                 @start="()=>{isSorting = true;}" @end="()=>{isSorting = false;}">
-        <content-render v-for="(child,idx) in value.contents"
-                        :value="child"
-                        :parent="value"
-                        @input="(val)=>{ value.contents[idx]=val; }"
-                        :key="idx"
-        ></content-render>
-      </draggable>
-    </template>
-    <template v-else-if="isRenderObject">
-      <component ref="content"
-                 :is="getTag"
-                 :data-title="getTag"
-                 :data-id="getUid"
-                 :id="getUid"
-                 :key="getUid"
-                 v-bind.sync="value.props"
-                 :class="getClass"
-                 :style="value.style || {}">
-      </component>
-    </template>
-    <template v-else-if="isStringType">
-      {{ value }}
-    </template>
-  </div>
-</template>
 <script>
 
 import CodeEditor from "@/components/CodeEditor";
 import createUniqueId from "@/lib/createUniqueId";
 import Draggable from 'vuedraggable';
+import InnerText from "@/Contents/InnerText";
 
 export default {
   name: 'ContentRender',
-  components: {CodeEditor, Draggable:Draggable},
+  render(h) {
+
+    const value = this.value;
+    if (!value) {
+      return;
+    }
+    const SelectorEvents = {
+      dblclick: this.activeContent,
+      click: this.focusContent,
+      mouseover: this.selectContent
+    };
+    const props = value.props || {};
+    const keys = Object.keys(props);
+    let propsEvents = {};
+    if(keys.length){
+      propsEvents = Object.fromEntries( keys.map((key) => {
+        return ["update:" + key, (val) => {
+          console.log(val)
+          this.$set(this.value.props, key, val);
+        }];
+      }) )
+    }
+
+    const children = value.contents || [];
+
+    const childrenNode = children.map((child, idx) => {
+      if (typeof child === 'string') {
+        return child;
+      }
+      return h('content-render', {props: {value: child, parent: this}, key: idx})
+    });
+
+    const tag = value.tag || 'div';
+
+    return h(tag, {
+      class: [...value.class || [], this.selectorClass],
+      style: value.style || {},
+      attrs: Object.assign(value.attrs || {}, props, {
+        'data-id': this.getUid,
+        'data-title': this.getTag
+      }),
+      props: props,
+      on: Object.assign(propsEvents, SelectorEvents),
+      ref: 'content'
+
+    }, childrenNode)
+  },
+  components: {InnerText, CodeEditor, Draggable: Draggable},
   inject: ['$editor'],
   props: {
     value: {
@@ -67,14 +68,15 @@ export default {
   data() {
     return {
       uid: null,
-      isLabelBottom: false
+      isEdited: false,
+      isLabelBottom: false,
     }
   },
   computed: {
     /**
      * @return {EditorStates}
      * */
-    getState(){
+    getState() {
       return this.$editor.states;
     },
     selectedContent: {
@@ -126,27 +128,24 @@ export default {
         this.getState.selectedElement = component;
       }
     },
-    isRenderObject() {
-      return typeof this.value === 'object' && this.value.tag
-    },
-    selectorClass(){
+    selectorClass() {
       const classes = [];
-      if( this.isEditing){
+      if (this.isEditing) {
         classes.push('is-editable');
       }
-      if( this.isSelectedContent || this.isFocusedContent){
+      if (this.isSelectedContent || this.isFocusedContent) {
         classes.push('is-selected');
       }
-      if( this.isLabelBottom){
+      if (this.isLabelBottom) {
         classes.push('label-bottom');
       }
-      if( this.$editor.config.showGrid ){
+      if (this.$editor.config.showGrid) {
         classes.push('show-guide');
       }
       return classes;
     },
     getClass() {
-      return [ ...this.value.class];
+      return [...this.value.class];
     },
     getTag() {
       return this.value.tag || 'text';
@@ -154,11 +153,8 @@ export default {
     contentId() {
       return this.value.id;
     },
-    isDragging() {
-      return !!this.dragComponent
-    },
     isSelectedContent() {
-      return this.selectedContent === this.contentId
+      return this.selectedContent && this.selectedContent.component === this;
     },
     isFocusedContent() {
       return this.focusedContent && this.focusedContent.component === this;
@@ -178,24 +174,27 @@ export default {
     },
     isStringType() {
       return typeof this.value === 'string';
+    },
+    getAttrs() {
+      return Object.assign(this.value.attrs || {}, this.value.props || {})
     }
   },
   methods: {
     setUid() {
-      if(this.isStringType){
-        return ;
+      if (this.isStringType) {
+        return;
       }
       if (!this.value.id) {
         this.$set(this.value, 'id', this.createUid())
       }
     },
-    deleteContent(){
+    deleteContent() {
 
-      if(!this.parent){
+      if (!this.parent) {
         console.warn('Root cannot be removed');
         return false;
       }
-      this.parent.contents = this.parent.contents.filter((content)=>{
+      this.parent.contents = this.parent.contents.filter((content) => {
         return content.id !== this.value.id;
       });
     },
@@ -224,7 +223,7 @@ export default {
         const parentContentRender = this.getParentContentRender(event.target);
 
         if (parentContentRender) {
-          this.selectedContent = parentContentRender.getAttribute('data-id');
+          this.selectedContent = {id: this.contentId, component: this};
           event.stopPropagation();
           return;
         }
@@ -233,7 +232,7 @@ export default {
         return false;
       }
 
-      this.selectedContent = this.getDataIdFrom(event);
+      this.selectedContent = {id: this.contentId, component: this};
 
       this.$nextTick(() => {
         this.labelStyle();
@@ -241,41 +240,56 @@ export default {
 
       event.stopPropagation();
     },
+    setEditingContentAsThis() {
+      this.focusedContent = {id: this.contentId, component: this};
+      console.log(this.$refs['content'], this.$children)
+      if (this.$refs['content'] && this.$refs['content'].enableEdit) {
+        this.$refs['content'].enableEdit();
+      } else {
+        this.isEdited = true;
+
+      }
+
+      this.setEditingContent()
+    },
     activeContent(e) {
+
       if (this.isEditing) {
         this.unsetEditingContent()
         e.stopPropagation();
         return;
       }
-      this.focusedContent = {id: this.getDataIdFrom(e), component: this};
-      if (this.$refs['content'] && this.$refs['content'].enableEdit) {
-        this.$refs['content'].enableEdit();
-      }
-      this.setEditingContent()
+      this.setEditingContentAsThis();
       e.stopPropagation();
     },
     unsetEditingContent() {
       const component = this.editingContent.component;
+
       if (component.$refs['content'] && component.$refs['content'].disableEdit) {
         component.$refs['content'].disableEdit(this);
+      } else {
+        this.isEdited = false;
+        console.log(component.$el.innerHTML);
+        this.$emit('update:value', component.$el.innerHTML);
       }
       this.getState.editingContent = null;
     },
     setEditingContent() {
-      this.getState.editingContent = {id:this.getUid, component:this};
+      this.getState.editingContent = {id: this.getUid, component: this};
+    },
+    setFocusedContent() {
+      this.getState.focusedContent = {id: this.getUid, component: this};
     },
     focusContent(e) {
       // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
-      if ( this.editingContent && !this.isEditing) {
+      if (this.editingContent && !this.isEditing) {
         this.focusedContent = null;
         this.selectedContent = null;
         this.unsetEditingContent();
       }
-      if (this.isFocusedContent) {
-        this.focusedContent = null;
-      } else {
-        this.focusedContent = {id: this.getDataIdFrom(e), component: this};
-      }
+
+      this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+
       e.stopPropagation();
     },
     createUid() {
@@ -290,9 +304,9 @@ export default {
       this.$emit('input', this.value)
       this.isSorting = false;
     },
-    updateValue(val){
+    updateValue(val) {
       this.$emit('input', val);
-    }
+    },
   },
   created() {
     this.setUid();
@@ -300,47 +314,25 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.transitional{
-  transition: all ease-in-out 0.3ms;
-}
+
 .ghost {
   background-color: #e1e2e3;
   opacity: .5;
 }
 
 .is-selected, .is-editable {
-  position: relative;
   outline: #42b983 2px solid;
-
-}
-
-.is-selected:before, .is-editable:before {
-  content: attr(data-title);
-  position: absolute;
-  left: -2px;
-  top: -20px;
-  background-color: #42b983;
-  color: white;
-  font-size: 9px;
-  padding: 2px 6px;
-  z-index: 100;
-}
-
-.is-selected.label-bottom:before {
-  left: -2px;
-  top: unset !important;
-  bottom: -20px !important;
 }
 
 .is-editable {
-  outline: orange 2px solid;
+  outline-color: orange;
 }
 
 .is-editable:before {
   background-color: orange !important;
 }
 
-.show-guide *[data-type='sorter'] {
+.show-guide {
   outline: 1px dashed #606060;
   padding: 1rem;
   transition: all ease-in-out 300ms;
