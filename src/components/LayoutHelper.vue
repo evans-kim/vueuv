@@ -48,7 +48,7 @@
             <btn @click="setStyle('flex-direction', 'column')"> Column</btn>
           </div>
           <div v-if="activeTab === 'tree'" ref="structure" style="max-height: 300px; overflow-y: auto">
-            <content-tree :value="$editor.contentModel"></content-tree>
+            <content-tree :value="$editor.contentModel.contents"></content-tree>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@ export default {
   components: {ContentTree, CodeEditor, ClassTagInput, Btn},
   data() {
     return {
-      activeTab: 'class',
+      activeTab: 'tree',
       getStyle: {
         display: 'none',
         justifyContent: 'baseline',

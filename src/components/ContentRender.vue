@@ -16,7 +16,8 @@ export default {
     const SelectorEvents = {
       dblclick: this.activeContent,
       click: this.focusContent,
-      mouseover: this.selectContent
+      mouseover: this.selectContent,
+
     };
     const props = value.props || {};
     const keys = Object.keys(props);
@@ -154,7 +155,7 @@ export default {
       return this.value.id;
     },
     isSelectedContent() {
-      return this.selectedContent && this.selectedContent.component === this;
+      return this.selectedContent && this.selectedContent.id === this.contentId;
     },
     isFocusedContent() {
       return this.focusedContent && this.focusedContent.component === this;
@@ -218,7 +219,9 @@ export default {
       }
     },
     selectContent(event) {
-
+      if(this.focusedContent){
+        return ;
+      }
       if (!event.target !== this.$el) {
         const parentContentRender = this.getParentContentRender(event.target);
 
@@ -275,9 +278,13 @@ export default {
       this.getState.editingContent = null;
     },
     setEditingContent() {
+      this.selectedContent = null;
+      this.focusedContent = null;
       this.getState.editingContent = {id: this.getUid, component: this};
     },
     setFocusedContent() {
+      this.selectedContent = null;
+      this.editingContent = null;
       this.getState.focusedContent = {id: this.getUid, component: this};
     },
     focusContent(e) {
@@ -288,7 +295,13 @@ export default {
         this.unsetEditingContent();
       }
 
-      this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+      if(this.focusedContent && this.focusedContent.id === this.contentId){
+        this.focusedContent = null;
+        this.selectedContent = null;
+      }else{
+        this.selectedContent = null;
+        this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+      }
 
       e.stopPropagation();
     },
@@ -306,7 +319,7 @@ export default {
     },
     updateValue(val) {
       this.$emit('input', val);
-    },
+    }
   },
   created() {
     this.setUid();
@@ -314,6 +327,9 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.sortable-chosen{
+  transition: all ease-in-out 0.3ms ;
+}
 
 .ghost {
   background-color: #e1e2e3;

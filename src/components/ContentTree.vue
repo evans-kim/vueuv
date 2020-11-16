@@ -1,18 +1,42 @@
 <template>
-  <ul v-if="hasContents(value)">
-    <li class="pl-2 cursor-pointer" v-for="(com, idx) in value.contents" :key="idx" @click.stop="setSelectedContentId(com)">
-      <div v-if="com && com.id" :class="{'selected-tag':isFocused(com.id)}" style="outline: #42b983 1px dashed" :style="getStyle(com)">{{ com.tag }}#{{ com.id }}</div>
-      <content-tree :value="com"></content-tree>
+  <draggable tag="ul" v-if="hasContents(value)"
+             group="content-tree"
+             ghost-class="ghost"
+             handle=".node-handler"
+             animation="300"
+             :value="value"
+             @input="(val)=>{ $emit('input', val) }" >
+    <li class="pl-2" v-for="(com, idx) in value" :key="idx">
+      <div v-if="com && com.id" :class="{'selected-tag':isFocused(com.id)}" class="node" :style="getStyle(com)">
+        <span class="node-handler p-2" @click.stop="setSelectedContentId(com)"> :: </span>
+        {{ com.tag }}#{{ com.id }}
+        <span v-if="hasChildren(com)" class="toggle" @click="()=>{ isOpen = !isOpen }"> {{ isOpen ? '-' : '+' }} </span>
+      </div>
+      <template v-if="hasChildren(com)">
+        <content-tree v-model="com.contents" v-show="isOpen"></content-tree>
+      </template>
     </li>
-  </ul>
+  </draggable>
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 export default {
   name: "ContentTree",
+  components:{
+    draggable
+  },
   inject: ['$editor'],
+  data(){
+    return{
+      isOpen : true
+    }
+  },
   props:{
-    value : [Object, String],
+    value : {
+      type: Array,
+      default(){return[]}
+    },
   },
   computed:{
     getStates(){
@@ -27,7 +51,7 @@ export default {
       return this.getStates.selectedContent && this.getStates.selectedContent === id;
     },
     hasContents(com) {
-      return typeof com === 'object' && com.contents && com.contents.length > 0;
+      return  com && com.length > 0;
     },
     getStyle(com) {
       const styles = {};
@@ -46,11 +70,31 @@ export default {
         const contentRender = this.$editor.getContentRenderById(com.id, this.$editor.$refs.render);
         contentRender.setFocusedContent();
       }
+    },
+    hasChildren(com) {
+      return com.contents && com.contents.length;
     }
   }
 }
 </script>
 
 <style scoped>
-
+  .node{
+    outline: #42b983 1px dashed;
+    padding: 0.2rem;
+  }
+  .node-handler{
+    cursor: pointer;
+  }
+  .toggle{
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: #606060;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    text-align: center;
+    line-height: 20px;
+    color: white;
+  }
 </style>

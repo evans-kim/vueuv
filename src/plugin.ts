@@ -23,7 +23,7 @@ export default {
                 }
                 Vue.component(option.name, option);
             })
-            VueuvEditor.customContents = options.plugins;
+            //VueuvEditor.customContents = options.plugins;
         }
         // 에디터 등록
         Vue.component(VueuvEditor.name, VueuvEditor);

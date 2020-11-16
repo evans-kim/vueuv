@@ -49,7 +49,9 @@ export default {
         editingContent: null,
         isSorting: false,
       },
-      contentModel: {}
+      contentModel: {
+        contents:[]
+      }
     }
   },
   provide() {
@@ -159,8 +161,8 @@ export default {
       const parser = new DOMParser();
       const htmlDoc = parser.parseFromString(htmlString, 'text/html');
       const body = htmlDoc.getElementsByTagName('body');
-      const content = this.parseHtml(body[0]).contents[0];
-      this.contentModel = Object.assign({}, content);
+      const content = this.parseHtml(body[0]);
+      this.contentModel.contents = [content];
     },
     updateModel(val) {
       this.contentModel = val;
@@ -176,9 +178,8 @@ export default {
       this.convertValueProp(this.value);
     }
     document.addEventListener('keyup', (e) => {
-      console.log(e);
+      //
     })
-    console.log(this.$refs['render'])
   }
 }
 </script>

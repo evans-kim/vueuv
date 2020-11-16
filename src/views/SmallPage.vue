@@ -2,24 +2,14 @@
   <div id="igele" class="cms-thumbnail-box fixed-margin">
     <div id="i6tqa" class="cms-thumbnail-title"><h5 id="i600v" class="price-title">3만원 이상</h5></div>
     <div id="iaas8" class="cms-thumbnail-list">
-      <div class="cms-thumbnail-item"><img
+      <div class="cms-thumbnail-item">
+        <img
           src="https://image.candleworks.com/cms-manager/3/00ZoBh18LdXdLmPMoJfQdlJs9NKHyYqm7ovN4Kyw.jpeg" id="ii40p"
           class="cms-thumbnail-img">
-        <div id="i7a2kd" title="" class="cursor-pointer">
-          <div id="iqthi5">
-            <div id="i8ewai" class="absolute left-0 top-0 w-full h-full flex items-center justify-center"><h4
-                class="text-white">증정종료</h4></div>
-          </div>
-          <div id="irtfq8"><h4 class="cms-thumbnail-item-title">옐로우 레오파드 틴케이스 (라지)</h4></div>
-        </div>
       </div>
       <div class="cms-thumbnail-item"><img
           src="https://image.candleworks.com/cms-manager/3/2x6N8mrlDmOau5dllEETf1es39cmW6cmxocInyUf.jpeg"
           class="cms-thumbnail-img">
-        <div id="iafvj8" title="" class="cursor-pointer">
-          <div id="icwsoh"></div>
-          <div id="i1mxqv"><h4 class="cms-thumbnail-item-title">그레이 레오파드 틴케이스 (라지)</h4></div>
-        </div>
       </div>
       <div class="cms-thumbnail-item"><img
           src="https://image.candleworks.com/cms-manager/3/bHhznOEJZWDVSEED6LYNJn9InbyvpLX3wSY41Sfn.jpeg"
