@@ -19,7 +19,7 @@ export default {
       mouseover: this.selectContent,
 
     };
-    const props = value.props || {};
+    let props = value.props || {};
     const keys = Object.keys(props);
     let propsEvents = {};
     if(keys.length){
@@ -40,17 +40,37 @@ export default {
       return h('content-render', {props: {value: child, parent: this}, key: idx})
     });
 
-    const tag = value.tag || 'div';
+    let tag = value.tag || 'div';
+
+    const selectorAttrs = {
+      'data-id': this.getUid,
+      'data-title': this.getTag
+    };
+    const listeners = Object.assign(propsEvents, SelectorEvents);
+    if(children.length > 0){
+      
+      props = Object.assign({
+        tag : tag,
+        componentData : {
+          attrs :props,
+          on: listeners
+        }
+      }, props);
+
+      tag = 'draggable';
+      selectorAttrs.group = 'content-render';
+      selectorAttrs.animation = '300';
+      SelectorEvents['input'] = (val)=>{
+        this.$emit('input', val);
+      }
+    }
 
     return h(tag, {
       class: [...value.class || [], this.selectorClass],
       style: value.style || {},
-      attrs: Object.assign(value.attrs || {}, props, {
-        'data-id': this.getUid,
-        'data-title': this.getTag
-      }),
+      attrs: Object.assign(value.attrs || {}, props, selectorAttrs),
       props: props,
-      on: Object.assign(propsEvents, SelectorEvents),
+      on: listeners,
       ref: 'content'
 
     }, childrenNode)
@@ -219,6 +239,7 @@ export default {
       }
     },
     selectContent(event) {
+
       if(this.focusedContent){
         return ;
       }
@@ -245,7 +266,7 @@ export default {
     },
     setEditingContentAsThis() {
       this.focusedContent = {id: this.contentId, component: this};
-      console.log(this.$refs['content'], this.$children)
+
       if (this.$refs['content'] && this.$refs['content'].enableEdit) {
         this.$refs['content'].enableEdit();
       } else {
@@ -288,6 +309,7 @@ export default {
       this.getState.focusedContent = {id: this.getUid, component: this};
     },
     focusContent(e) {
+      console.log(e);
       // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
       if (this.editingContent && !this.isEditing) {
         this.focusedContent = null;

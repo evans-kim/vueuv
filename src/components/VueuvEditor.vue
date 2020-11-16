@@ -93,7 +93,6 @@ export default {
         code.html = this.getHtml();
         code.css = this.getCSS();
       })
-      console.log(code);
       this.$emit('input', code.html + `<style type="text/css">${code.css}</style>`);
     },
     getHtml() {
@@ -115,7 +114,6 @@ export default {
       }
     },
     parseTextElement(e) {
-      console.log(typeof e);
       return {
         tag: 'inner-text',
         id: createUid(),

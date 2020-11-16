@@ -25,9 +25,6 @@ export default {
       this.$emit('update:value', args);
       this.isEdited = false;
     },
-  },
-  mounted() {
-    console.log(this.$listeners)
   }
 }
 </script>
