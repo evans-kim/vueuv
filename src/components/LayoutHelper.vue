@@ -15,8 +15,8 @@
           <button :class="activeClass('tree')" @click="activeTab = 'tree';"
                   class="rounded border mr-1 bg-white shadow p-2 focus:outline-none">구조
           </button>
-          <btn @click.stop="addContents"><i class="icofont icofont-sub-listing"></i></btn>
-          <btn color="orange" @click.stop="deleteContents"><i class="icofont icofont-delete"></i></btn>
+          <vu-button @click.stop="addContents"><i class="icofont icofont-sub-listing"></i></vu-button>
+          <vu-button color="orange" @click.stop="deleteContents"><i class="icofont icofont-delete"></i></vu-button>
         </div>
         <div class="panel-body p-2 bg-white shadow rounded" style="max-width: 40rem;">
           <div v-if="activeTab === 'class'">
@@ -30,25 +30,25 @@
             <code-editor v-model="getTargetStyleText"></code-editor>
           </div>
           <div v-if="activeTab === 'controller'">
-            <btn @click="toggleDisplay"> flex</btn>
+            <vu-button @click="toggleDisplay"> flex</vu-button>
             |
-            <btn @click="setStyle('justify-content', 'flex-start')"> left</btn>
-            <btn @click="setStyle('justify-content', 'center')"> center</btn>
-            <btn @click="setStyle('justify-content', 'flex-end')"> right</btn>
-            <btn @click="setStyle('justify-content', 'space-between')"> around</btn>
-            <btn @click="setStyle('justify-content', 'space-around')"> between</btn>
+            <vu-button @click="setStyle('justify-content', 'flex-start')"> left</vu-button>
+            <vu-button @click="setStyle('justify-content', 'center')"> center</vu-button>
+            <vu-button @click="setStyle('justify-content', 'flex-end')"> right</vu-button>
+            <vu-button @click="setStyle('justify-content', 'space-between')"> around</vu-button>
+            <vu-button @click="setStyle('justify-content', 'space-around')"> between</vu-button>
             |
-            <btn @click="setStyle('align-items', 'flex-start')"> top</btn>
-            <btn @click="setStyle('align-items', 'baseline')"> Baseline</btn>
-            <btn @click="setStyle('align-items', 'center')"> center</btn>
-            <btn @click="setStyle('align-items', 'flex-end')"> bottom</btn>
-            <btn @click="setStyle('align-items', 'stretch')"> stretch</btn>
+            <vu-button @click="setStyle('align-items', 'flex-start')"> top</vu-button>
+            <vu-button @click="setStyle('align-items', 'baseline')"> Baseline</vu-button>
+            <vu-button @click="setStyle('align-items', 'center')"> center</vu-button>
+            <vu-button @click="setStyle('align-items', 'flex-end')"> bottom</vu-button>
+            <vu-button @click="setStyle('align-items', 'stretch')"> stretch</vu-button>
             |
-            <btn @click="setStyle('flex-direction', 'row')"> Row</btn>
-            <btn @click="setStyle('flex-direction', 'column')"> Column</btn>
+            <vu-button @click="setStyle('flex-direction', 'row')"> Row</vu-button>
+            <vu-button @click="setStyle('flex-direction', 'column')"> Column</vu-button>
           </div>
           <div v-if="activeTab === 'tree'" ref="structure" style="max-height: 300px; overflow-y: auto">
-            <content-tree :value="$editor.contentModel.contents"></content-tree>
+            <content-tree v-model="$editor.contentModel.contents"></content-tree>
           </div>
         </div>
       </div>
@@ -60,14 +60,14 @@
 
 import ClassTagInput from "@/components/ClassTagInput";
 import CodeEditor from "@/components/CodeEditor";
-import Btn from "@/components/Btn";
+import VuButton from "@/components/VuButton";
 import createUid from "@/lib/createUniqueId";
 import ContentTree from "@/components/ContentTree";
 
 export default {
   name: "LayoutHelper",
   inject:['$editor'],
-  components: {ContentTree, CodeEditor, ClassTagInput, Btn},
+  components: {ContentTree, CodeEditor, ClassTagInput, VuButton},
   data() {
     return {
       activeTab: 'tree',
@@ -186,7 +186,11 @@ export default {
     scrollMoveToSelectedContent() {
 
       const div = this.$refs['structure'];
-      const tag = div.getElementsByClassName('selected-tag')[0];
+      const selectedTags = div.getElementsByClassName('selected-tag');
+      if(!selectedTags.length){
+        return;
+      }
+      const tag = selectedTags[0];
       const tagRect = tag.getBoundingClientRect();
       const divRect = div.getBoundingClientRect();
 

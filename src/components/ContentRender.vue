@@ -4,6 +4,8 @@ import CodeEditor from "@/components/CodeEditor";
 import createUniqueId from "@/lib/createUniqueId";
 import Draggable from 'vuedraggable';
 import InnerText from "@/Contents/InnerText";
+import Sortable from "sortablejs";
+import * as cloneDeep from "lodash/cloneDeep"
 
 export default {
   name: 'ContentRender',
@@ -17,63 +19,52 @@ export default {
       dblclick: this.activeContent,
       click: this.focusContent,
       mouseover: this.selectContent,
-
     };
-    let props = value.props || {};
+    const props = value.props || {};
     const keys = Object.keys(props);
     let propsEvents = {};
-    if(keys.length){
-      propsEvents = Object.fromEntries( keys.map((key) => {
+    if (keys.length) {
+      propsEvents = Object.fromEntries(keys.map((key) => {
         return ["update:" + key, (val) => {
-          console.log(val)
           this.$set(this.value.props, key, val);
         }];
-      }) )
+      }))
     }
 
     const children = value.contents || [];
 
-    const childrenNode = children.map((child, idx) => {
+    const childrenNode = children.map((child) => {
       if (typeof child === 'string') {
         return child;
       }
-      return h('content-render', {props: {value: child, parent: this}, key: idx})
+      return h('content-render', {props: {value: child, parent: this}, key: child.id})
     });
 
     let tag = value.tag || 'div';
+
+    if (value.tag === 'img') {
+      tag = 'basic-image';
+    }
 
     const selectorAttrs = {
       'data-id': this.getUid,
       'data-title': this.getTag
     };
     const listeners = Object.assign(propsEvents, SelectorEvents);
-    if(children.length > 0){
-      
-      props = Object.assign({
-        tag : tag,
-        componentData : {
-          attrs :props,
-          on: listeners
-        }
-      }, props);
 
-      tag = 'draggable';
-      selectorAttrs.group = 'content-render';
-      selectorAttrs.animation = '300';
-      SelectorEvents['input'] = (val)=>{
-        this.$emit('input', val);
-      }
-    }
+    const attrs = Object.assign(value.attrs || {}, props, selectorAttrs);
 
-    return h(tag, {
-      class: [...value.class || [], this.selectorClass],
+    const data = {
+      class: [...value.class || [], ...this.selectorClass()],
       style: value.style || {},
-      attrs: Object.assign(value.attrs || {}, props, selectorAttrs),
+      attrs: attrs,
       props: props,
       on: listeners,
-      ref: 'content'
+      ref: 'content',
+      key: value.id
+    };
 
-    }, childrenNode)
+    return h(tag, data, childrenNode)
   },
   components: {InnerText, CodeEditor, Draggable: Draggable},
   inject: ['$editor'],
@@ -87,10 +78,13 @@ export default {
     }
   },
   data() {
+
     return {
       uid: null,
       isEdited: false,
       isLabelBottom: false,
+      isGuided: false,
+      sortable: null
     }
   },
   computed: {
@@ -149,22 +143,6 @@ export default {
         this.getState.selectedElement = component;
       }
     },
-    selectorClass() {
-      const classes = [];
-      if (this.isEditing) {
-        classes.push('is-editable');
-      }
-      if (this.isSelectedContent || this.isFocusedContent) {
-        classes.push('is-selected');
-      }
-      if (this.isLabelBottom) {
-        classes.push('label-bottom');
-      }
-      if (this.$editor.config.showGrid) {
-        classes.push('show-guide');
-      }
-      return classes;
-    },
     getClass() {
       return [...this.value.class];
     },
@@ -198,9 +176,31 @@ export default {
     },
     getAttrs() {
       return Object.assign(this.value.attrs || {}, this.value.props || {})
+    },
+    getGroupOption() {
+      return {name: 'content-render', pull: (this.$editor.keys.ctrl) ? 'clone' : true, put: true}
     }
   },
   methods: {
+    selectorClass() {
+      const classes = [];
+      if (this.isEditing) {
+        classes.push('is-editable');
+      }
+      if (this.isSelectedContent || this.isFocusedContent) {
+        classes.push('is-selected');
+      }
+      if (this.isLabelBottom) {
+        classes.push('label-bottom');
+      }
+      if (this.$editor.config.showGrid || this.$editor.states.isSorting) {
+        classes.push('show-guide');
+      }
+      if (this.isGuided) {
+        classes.push('hide-guide');
+      }
+      return classes;
+    },
     setUid() {
       if (this.isStringType) {
         return;
@@ -215,7 +215,8 @@ export default {
         console.warn('Root cannot be removed');
         return false;
       }
-      this.parent.contents = this.parent.contents.filter((content) => {
+
+      this.parent.value.contents = this.parent.value.contents.filter((content) => {
         return content.id !== this.value.id;
       });
     },
@@ -240,8 +241,8 @@ export default {
     },
     selectContent(event) {
 
-      if(this.focusedContent){
-        return ;
+      if (this.focusedContent) {
+        return;
       }
       if (!event.target !== this.$el) {
         const parentContentRender = this.getParentContentRender(event.target);
@@ -293,7 +294,7 @@ export default {
         component.$refs['content'].disableEdit(this);
       } else {
         this.isEdited = false;
-        console.log(component.$el.innerHTML);
+
         this.$emit('update:value', component.$el.innerHTML);
       }
       this.getState.editingContent = null;
@@ -309,7 +310,7 @@ export default {
       this.getState.focusedContent = {id: this.getUid, component: this};
     },
     focusContent(e) {
-      console.log(e);
+
       // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
       if (this.editingContent && !this.isEditing) {
         this.focusedContent = null;
@@ -317,10 +318,10 @@ export default {
         this.unsetEditingContent();
       }
 
-      if(this.focusedContent && this.focusedContent.id === this.contentId){
+      if (this.focusedContent && this.focusedContent.id === this.contentId) {
         this.focusedContent = null;
         this.selectedContent = null;
-      }else{
+      } else {
         this.selectedContent = null;
         this.focusedContent = {id: this.getDataIdFrom(e), component: this};
       }
@@ -341,16 +342,97 @@ export default {
     },
     updateValue(val) {
       this.$emit('input', val);
+    },
+    move(arr, fromIndex, toIndex) {
+      const item = arr[fromIndex];
+      this.$delete(arr, fromIndex)
+      arr.splice(toIndex, 0, item);
+    },
+    initSorting() {
+
+      if (this.value.contents && this.value.contents.length) {
+
+        const _render = {vue: this};
+        const editor = this.$editor;
+
+        this.sortable = Sortable.create(this.$el, {
+          group: 'content-render',
+          ghostClass: 'ghost',
+          animation: 200,
+          onAdd: function (/**Event*/ evt) {
+            const point = {
+              type: 'add',
+              item: evt.item.getAttribute('data-id'),
+              from: evt.from.getAttribute('data-id'),
+              to: evt.to.getAttribute('data-id'),
+              oldIndex: evt.oldIndex,
+              newIndex: evt.newIndex
+            };
+            const contentValue = editor.getContentValueById(point.item);
+            _render.vue.value.contents.splice(point.newIndex, 0, contentValue)
+          },
+          onRemove: function (/**Event*/ evt) {
+            const point = {
+              type: 'remove',
+              item: evt.item.getAttribute('data-id'),
+              from: evt.from.getAttribute('data-id'),
+              to: evt.to.getAttribute('data-id'),
+              oldIndex: evt.oldIndex,
+              newIndex: evt.newIndex
+            };
+
+            if (_render.vue.$editor.keys.ctrl) {
+              console.log('복제하기')
+              const idRecreate = function (content) {
+                content.id = createUniqueId();
+                if (content.contents)
+                  content.contents.map(con => {
+                    idRecreate(con);
+                  });
+              }
+
+              const contentValue = cloneDeep(editor.getContentValueById(point.item));
+              console.log(contentValue)
+              idRecreate(contentValue);
+
+              _render.vue.$set(_render.vue.value.contents, point.oldIndex, contentValue)
+              _render.vue.$editor.refreshKey();
+
+              console.log('복제위해 새로운 데이터를 넣습니다.', contentValue, _render.vue.value);
+              return;
+            }
+
+            _render.vue.value.contents.splice(point.oldIndex, 1)
+
+          },
+          onUpdate: function (/**Event*/ evt) {
+            const point = {
+              type: 'update',
+              item: evt.item.getAttribute('data-id'),
+              from: evt.from.getAttribute('data-id'),
+              to: evt.to.getAttribute('data-id'),
+              oldIndex: evt.oldIndex,
+              newIndex: evt.newIndex
+            };
+
+            _render.vue.move(_render.vue.value.contents, point.oldIndex, point.newIndex)
+
+          }
+        })
+      }
     }
   },
   created() {
     this.setUid();
+  },
+  mounted() {
+    this.initSorting();
   }
 }
 </script>
 <style lang="scss" scoped>
-.sortable-chosen{
-  transition: all ease-in-out 0.3ms ;
+.sortable-chosen {
+  transition: all ease-in-out 0.3ms;
 }
 
 .ghost {
@@ -376,7 +458,7 @@ export default {
   transition: all ease-in-out 300ms;
 }
 
-.hide-guide *[data-type='sorter'] {
+.hide-guide {
   transition: all ease-in-out 300ms;
 }
 </style>

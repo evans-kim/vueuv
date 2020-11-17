@@ -6,7 +6,7 @@
              animation="300"
              :value="value"
              @input="(val)=>{ $emit('input', val) }" >
-    <li class="pl-2" v-for="(com, idx) in value" :key="idx">
+    <li class="pl-3" v-for="(com, idx) in value" :key="idx">
       <div v-if="com && com.id" :class="{'selected-tag':isFocused(com.id)}" class="node" :style="getStyle(com)">
         <span class="node-handler p-2" @click.stop="setSelectedContentId(com)"> :: </span>
         {{ com.tag }}#{{ com.id }}
@@ -81,7 +81,7 @@ export default {
 <style scoped>
   .node{
     outline: #42b983 1px dashed;
-    padding: 0.2rem;
+    padding: 0.5rem;
   }
   .node-handler{
     cursor: pointer;

@@ -11,6 +11,7 @@ export default {
     install(Vue: VueConstructor, options: VueuvOption){
         // 데이터를 위한 플러그인이 있다면 컴포넌트로 등록합니다.
         if( options.plugins.length > 0 ){
+
             options.plugins.map((option: ComponentOptions<any>)=>{
                 if( !option.methods || !option.methods.enableEdit || !option.methods.disableEdit){
                     console.warn(option.name + ' cannot be registered. Vueuv Plugin must have [enableEdit, disableEdit] methods.');

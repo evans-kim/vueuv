@@ -1,8 +1,8 @@
 <template>
-  <div class="transit" style="position: relative;">
+  <div style="position: relative;" :class="getEditorClass">
     <menubar/>
-    <content-render ref="render" v-if="isEditable" :value="contentModel" @input="updateModel"></content-render>
-    <content-exporter ref="exporter" v-else :value="contentModel"></content-exporter>
+    <content-render ref="render" v-if="isEditable" :value="contentModel" @input="handleRenderInput" :key="renderKey"></content-render>
+    <content-exporter ref="exporter" v-if="!isEditable" :value="contentModel"></content-exporter>
     <content-style ref="style" :content="contentModel" :raw-css="css"></content-style>
     <layout-helper ref="helper"/>
     <pop-label :content="states.selectedContent" ref="selectLabel"/>
@@ -16,16 +16,17 @@
 
 <script>
 import ContentStyle from "@/components/ContentStyle.vue";
-import ContentRender from "@/components/ContentRender.vue";
 import ContentExporter from "@/components/ContentExporter.vue";
 import LayoutHelper from "@/components/LayoutHelper.vue";
 import Menubar from "@/components/Menubar";
 import createUid from "@/lib/createUniqueId";
 import PopLabel from "@/components/PopLabel";
+import ContentRender from "@/components/ContentRender";
+import * as cloneDeep from "lodash/cloneDeep"
 
 export default {
   name: "VueuvEditor",
-  components: { PopLabel, Menubar, LayoutHelper, ContentExporter, ContentRender, ContentStyle},
+  components: {ContentRender, PopLabel, Menubar, LayoutHelper, ContentExporter, ContentStyle},
   props: {
     html: {
       type: String
@@ -35,13 +36,30 @@ export default {
     },
     target: {
       type: [String, Object]
+    },
+    undoStep:{
+      type: [Number,String],
+      default: 10
+    }
+  },
+  watch:{
+    config:{
+      deep:true,
+      handler(val,old){
+        console.log(val,old);
+        this.transit = true;
+        setTimeout(()=>{
+          this.transit = false;
+        }, 1000)
+      }
     }
   },
   data() {
     return {
+      transit:false,
       config: {
         mode: 'editable',
-        showGrid: false,
+        showGrid: true,
       },
       states: {
         selectedContent: null,
@@ -51,7 +69,13 @@ export default {
       },
       contentModel: {
         contents:[]
-      }
+      },
+      logs:[],
+      keys:{
+        ctrl:false,
+        alt:false,
+      },
+      renderKey:'default'
     }
   },
   provide() {
@@ -65,9 +89,30 @@ export default {
     },
     hasEditingContent(){
       return !!this.states.editingContent
+    },
+    getEditorClass() {
+      return {
+        'fade-in-out-leave-active' : this.transit
+      }
     }
   },
   methods: {
+    refreshKey(){
+      this.renderKey = createUid();
+    },
+    undo(){
+      if(!this.logs.length){
+        return ;
+      }
+      const log = this.logs.pop();
+      console.log(log);
+      this.contentModel = log;
+      console.log('복구');
+    },
+    getContentValueById(id)
+    {
+      return this.getContentRenderById(id, this.$refs.render).value || {};
+    },
     getContentRenderById(id, vue) {
       if(!vue || typeof vue !== 'object'){
         return;
@@ -105,7 +150,6 @@ export default {
     },
     /** Parsing HTML **/
     parseNode(e) {
-
       switch (e.nodeType) {
         case 3:
           return this.parseTextElement(e)
@@ -148,21 +192,17 @@ export default {
 
       return model;
     },
-    parseHtml(element) {
-      return this.parseNode(element)
-    },
-    getMatchedCSSRules(element) {
-      return window.getMatchedCSSRules(element);
-    },
     /** Parsing HTML END **/
     convertValueProp(htmlString) {
       const parser = new DOMParser();
       const htmlDoc = parser.parseFromString(htmlString, 'text/html');
       const body = htmlDoc.getElementsByTagName('body');
-      const content = this.parseHtml(body[0]);
-      this.contentModel.contents = [content];
+      const content = this.parseNode(body[0]);
+
+      this.contentModel = content.contents[0];
     },
-    updateModel(val) {
+    handleRenderInput(val) {
+
       this.contentModel = val;
     }
   },
@@ -175,8 +215,19 @@ export default {
     if (this.value && typeof this.value === 'string') {
       this.convertValueProp(this.value);
     }
+
+    document.addEventListener('keydown', (e) => {
+
+      if(e.code === 'MetaLeft'){
+        this.keys.ctrl = true;
+      }
+    })
+
     document.addEventListener('keyup', (e) => {
-      //
+
+      if(e.code === 'MetaLeft'){
+        this.keys.ctrl = false;
+      }
     })
   }
 }

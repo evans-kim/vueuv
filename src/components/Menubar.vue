@@ -1,7 +1,10 @@
 <template>
-  <div class="flex">
+  <div class="flex border shadow mb-4 p-2 bg-white">
+    <div class="bold text-2xl px-2">
+      Vueuv Editor
+    </div>
     <draggable
-        class="flex"
+        class="flex mr-2"
         :list="blocks"
         :group="{ name: 'content-render', pull: 'clone', put: false }"
         :clone="addContent"
@@ -12,18 +15,21 @@
       > {{ block.label }}
       </div>
     </draggable>
-    <btn @click="toggleGrid">
-      <i class="icofont-2x icofont-eye"></i>
-    </btn>
-    <btn @click="exportEditor">
-      <i class="icofont-2x icofont-save"></i>
-    </btn>
+    <vu-button @click="toggleGrid">
+      <i class="icofont icofont-eye"></i>
+    </vu-button>
+    <vu-button @click="exportEditor">
+      <i class="icofont icofont-save"></i>
+    </vu-button>
+    <vu-button @click="undoContent">
+      <i class="icofont icofont-undo"></i>
+    </vu-button>
   </div>
 </template>
 
 <script>
 import createUid from "@/lib/createUniqueId";
-import Btn from "@/components/Btn";
+import VuButton from "@/components/VuButton";
 import * as clone from "lodash/cloneDeep"
 import Draggable from 'vuedraggable';
 
@@ -31,7 +37,7 @@ export default {
   name: "Menubar",
   inject:['$editor'],
   components:{
-    Btn, Draggable
+    VuButton, Draggable
   },
   data() {
     return{
@@ -72,6 +78,9 @@ export default {
       }else{
         this.$editor.config.mode = 'editable';
       }
+    },
+    undoContent() {
+      this.$editor.undo();
     }
   }
 }
