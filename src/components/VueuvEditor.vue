@@ -1,10 +1,11 @@
 <template>
-  <div style="position: relative;" :class="getEditorClass">
+  <div style="position: relative;" :class="getEditorClass" @click.stop="setDefaultSelect">
     <menubar/>
-    <content-render ref="render" v-if="isEditable" :value="contentModel" @input="handleRenderInput" :key="renderKey"></content-render>
+    <content-render ref="render" v-if="isEditable" :value="contentModel" @input="handleRenderInput"
+                    :key="renderKey"></content-render>
     <content-exporter ref="exporter" v-if="!isEditable" :value="contentModel"></content-exporter>
     <content-style ref="style" :content="contentModel" :raw-css="css"></content-style>
-    <layout-helper ref="helper"/>
+    <helper ref="helper" @update:content-value="updateFocusedContent"></helper>
     <pop-label :content="states.selectedContent" ref="selectLabel"/>
     <pop-label :content="states.focusedContent" ref="label"/>
     <pop-label :content="states.editingContent" color="orange" ref="label"/>
@@ -17,7 +18,7 @@
 <script>
 import ContentStyle from "@/components/ContentStyle.vue";
 import ContentExporter from "@/components/ContentExporter.vue";
-import LayoutHelper from "@/components/LayoutHelper.vue";
+import Helper from "@/components/Helper.vue";
 import Menubar from "@/components/Menubar";
 import createUid from "@/lib/createUniqueId";
 import PopLabel from "@/components/PopLabel";
@@ -26,7 +27,8 @@ import * as cloneDeep from "lodash/cloneDeep"
 
 export default {
   name: "VueuvEditor",
-  components: {ContentRender, PopLabel, Menubar, LayoutHelper, ContentExporter, ContentStyle},
+  components: {ContentRender, PopLabel, Menubar, Helper, ContentExporter, ContentStyle},
+  plugins: [],
   props: {
     html: {
       type: String
@@ -37,18 +39,17 @@ export default {
     target: {
       type: [String, Object]
     },
-    undoStep:{
-      type: [Number,String],
+    undoStep: {
+      type: [Number, String],
       default: 10
     }
   },
-  watch:{
-    config:{
-      deep:true,
-      handler(val,old){
-        console.log(val,old);
+  watch: {
+    config: {
+      deep: true,
+      handler(val, old) {
         this.transit = true;
-        setTimeout(()=>{
+        setTimeout(() => {
           this.transit = false;
         }, 1000)
       }
@@ -56,26 +57,28 @@ export default {
   },
   data() {
     return {
-      transit:false,
+      transit: false,
       config: {
         mode: 'editable',
-        showGrid: true,
+        showGrid: false,
       },
       states: {
         selectedContent: null,
         focusedContent: null,
         editingContent: null,
         isSorting: false,
+        dragBlock: null
       },
       contentModel: {
-        contents:[]
+        isRootContent:true,
+        contents: []
       },
-      logs:[],
-      keys:{
-        ctrl:false,
-        alt:false,
+      logs: [],
+      keys: {
+        ctrl: false,
+        alt: false,
       },
-      renderKey:'default'
+      renderKey: 'default'
     }
   },
   provide() {
@@ -87,34 +90,55 @@ export default {
     isEditable() {
       return this.config.mode === 'editable'
     },
-    hasEditingContent(){
+    hasEditingContent() {
       return !!this.states.editingContent
     },
     getEditorClass() {
       return {
-        'fade-in-out-leave-active' : this.transit
+        'fade-in-out-leave-active': this.transit
       }
     }
   },
   methods: {
-    refreshKey(){
+    hasDragBlock() {
+      return !!this.states.dragBlock
+    },
+    refreshKey() {
       this.renderKey = createUid();
+      console.log(this.renderKey)
     },
-    undo(){
-      if(!this.logs.length){
-        return ;
+    undo() {
+      if (!this.logs.length) {
+        return;
       }
-      const log = this.logs.pop();
-      console.log(log);
-      this.contentModel = log;
-      console.log('복구');
+      const rollback = this.logs.pop();
+      console.log(rollback);
+      rollback();
+      this.refreshKey();
     },
-    getContentValueById(id)
-    {
+    setRollBackPoint() {
+      const clone = cloneDeep(this.contentModel);
+      this.logs.push(()=>{
+        this.contentModel = clone;
+      });
+    },
+    saveLog() {
+      if (this.logs.length >= this.undoStep) {
+        this.logs.splice(0, 1);
+      }
+      this.logs.push(JSON.stringify(this.contentModel));
+    },
+    updateContentById(id, value){
+
+      let oldValue = this.getContentRenderById(id);
+      console.log(oldValue, value, oldValue === value);
+      oldValue = value;
+    },
+    getContentValueById(id) {
       return this.getContentRenderById(id, this.$refs.render).value || {};
     },
     getContentRenderById(id, vue) {
-      if(!vue || typeof vue !== 'object'){
+      if (!vue || typeof vue !== 'object') {
         return;
       }
       if (vue.contentId === id) {
@@ -123,7 +147,7 @@ export default {
       let result;
       for (let i = 0; i < vue.$children.length; i++) {
         result = this.getContentRenderById(id, vue.$children[i])
-        if(result){
+        if (result) {
           return result;
         }
       }
@@ -162,14 +186,13 @@ export default {
         tag: 'inner-text',
         id: createUid(),
         class: [],
-        props: { value: e.textContent },
+        props: {value: e.textContent},
       }
     },
     /**
      * @param {Element} e
      */
     parseElement(e) {
-
       const attrs = Object.fromEntries(Array.from(e.attributes, ({name, value}) => {
         return [name, value]
       }));
@@ -183,8 +206,10 @@ export default {
         tag: tag,
         id: id,
         class: classes,
+        style: {},
+        cssText: null,
         props: attrs,
-      }
+      };
 
       if (e.childNodes) {
         model.contents = Array.from(e.childNodes, this.parseNode)
@@ -198,12 +223,17 @@ export default {
       const htmlDoc = parser.parseFromString(htmlString, 'text/html');
       const body = htmlDoc.getElementsByTagName('body');
       const content = this.parseNode(body[0]);
-
-      this.contentModel = content.contents[0];
+      this.$set(this.contentModel.contents, 0, ...content.contents)
+      //this.contentModel.contents = content.contents;
     },
     handleRenderInput(val) {
-
       this.contentModel = val;
+    },
+    setDefaultSelect() {
+      this.states.selectedContent = null;
+    },
+    updateFocusedContent(val) {
+      console.log('focusedContent', val);
     }
   },
   mounted() {
@@ -212,20 +242,19 @@ export default {
       this.convertValueProp(target.outerHTML);
       target.style.display = 'none';
     }
-    if (this.value && typeof this.value === 'string') {
-      this.convertValueProp(this.value);
-    }
 
-    document.addEventListener('keydown', (e) => {
-
-      if(e.code === 'MetaLeft'){
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'MetaLeft') {
         this.keys.ctrl = true;
+      }
+      if (e.metaKey && e.key === 'z') {
+        this.undo();
       }
     })
 
-    document.addEventListener('keyup', (e) => {
+    window.addEventListener('keyup', (e) => {
 
-      if(e.code === 'MetaLeft'){
+      if (e.code === 'MetaLeft') {
         this.keys.ctrl = false;
       }
     })

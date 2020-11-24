@@ -1,5 +1,5 @@
 <template>
-  <div :id="getEditorId" v-html="value"></div>
+  <div :id="getEditorId" v-html="value" v-vueuv-content></div>
 </template>
 
 <script>
@@ -55,14 +55,21 @@ import 'tinymce/plugins/autoresize';
 
 export default {
   name: "TextContent",
+  label:'문단',
+  contentDefault:{
+    style:{padding:'1rem'},
+    props:{
+      value:'New paragraph'
+    }
+  },
   props: {
     value: {
       type: String
     }
   },
   data(){
-    this.editor = null;
     return {
+      editor: null,
       contentId : null
     }
   },

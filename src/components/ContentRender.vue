@@ -2,9 +2,8 @@
 
 import CodeEditor from "@/components/CodeEditor";
 import createUniqueId from "@/lib/createUniqueId";
-import Draggable from 'vuedraggable';
 import InnerText from "@/Contents/InnerText";
-import Sortable from "sortablejs";
+import SortableContent from "@/lib/SortableContent";
 import * as cloneDeep from "lodash/cloneDeep"
 
 export default {
@@ -18,17 +17,14 @@ export default {
     const SelectorEvents = {
       dblclick: this.activeContent,
       click: this.focusContent,
-      mouseover: this.selectContent,
+      mouseover: this.selectContent
     };
     const props = value.props || {};
     const keys = Object.keys(props);
     let propsEvents = {};
+
     if (keys.length) {
-      propsEvents = Object.fromEntries(keys.map((key) => {
-        return ["update:" + key, (val) => {
-          this.$set(this.value.props, key, val);
-        }];
-      }))
+      propsEvents = this.getPropsEvents(keys)
     }
 
     const children = value.contents || [];
@@ -37,7 +33,7 @@ export default {
       if (typeof child === 'string') {
         return child;
       }
-      return h('content-render', {props: {value: child, parent: this}, key: child.id})
+      return this.createChild(h, child)
     });
 
     let tag = value.tag || 'div';
@@ -47,6 +43,7 @@ export default {
     }
 
     const selectorAttrs = {
+      id: this.getUid,
       'data-id': this.getUid,
       'data-title': this.getTag
     };
@@ -66,7 +63,7 @@ export default {
 
     return h(tag, data, childrenNode)
   },
-  components: {InnerText, CodeEditor, Draggable: Draggable},
+  components: {InnerText, CodeEditor},
   inject: ['$editor'],
   props: {
     value: {
@@ -88,6 +85,9 @@ export default {
     }
   },
   computed: {
+    getValue() {
+      return this.value;
+    },
     /**
      * @return {EditorStates}
      * */
@@ -156,7 +156,10 @@ export default {
       return this.selectedContent && this.selectedContent.id === this.contentId;
     },
     isFocusedContent() {
-      return this.focusedContent && this.focusedContent.component === this;
+      if (!this.focusedContent) {
+        return false;
+      }
+      return this.focusedContent.component === this;
     },
     isEditing() {
       if (!this.editingContent) {
@@ -177,11 +180,29 @@ export default {
     getAttrs() {
       return Object.assign(this.value.attrs || {}, this.value.props || {})
     },
-    getGroupOption() {
-      return {name: 'content-render', pull: (this.$editor.keys.ctrl) ? 'clone' : true, put: true}
+    getIndexFromParent() {
+      if (!this.parent) {
+        return null;
+      }
+      return this.parent.value.contents.map(content => content.id).indexOf(this.value.id)
     }
   },
   methods: {
+    getPropsEvents(keys) {
+      return Object.fromEntries(keys.map((key) => {
+        return ["update:" + key, (val) => {
+
+          this.$editor.setRollBackPoint();
+          this.$set(this.value.props, key, val);
+        }];
+      }));
+    },
+    updateContentValue(value) {
+      this.$set(this.parent.value.contents, this.getIndexFromParent, value);
+    },
+    createChild(h, child) {
+      return h('content-render', {props: {value: child, parent: this}, key: child.id});
+    },
     selectorClass() {
       const classes = [];
       if (this.isEditing) {
@@ -219,6 +240,10 @@ export default {
       this.parent.value.contents = this.parent.value.contents.filter((content) => {
         return content.id !== this.value.id;
       });
+
+      this.focusedContent = null;
+      this.editingContent = null;
+      this.selectedContent = null;
     },
     getDataIdFrom(event) {
       return event.target.getAttribute('data-id');
@@ -262,20 +287,7 @@ export default {
       this.$nextTick(() => {
         this.labelStyle();
       });
-
       event.stopPropagation();
-    },
-    setEditingContentAsThis() {
-      this.focusedContent = {id: this.contentId, component: this};
-
-      if (this.$refs['content'] && this.$refs['content'].enableEdit) {
-        this.$refs['content'].enableEdit();
-      } else {
-        this.isEdited = true;
-
-      }
-
-      this.setEditingContent()
     },
     activeContent(e) {
 
@@ -285,7 +297,13 @@ export default {
         return;
       }
       this.setEditingContentAsThis();
+
       e.stopPropagation();
+    },
+    setEditingContentAsThis() {
+      this.focusedContent = {id: this.contentId, component: this};
+
+      this.setEditingContent()
     },
     unsetEditingContent() {
       const component = this.editingContent.component;
@@ -301,8 +319,14 @@ export default {
     },
     setEditingContent() {
       this.selectedContent = null;
-      this.focusedContent = null;
+      this.editingContent = null;
+
       this.getState.editingContent = {id: this.getUid, component: this};
+      if (this.$refs['content'] && this.$refs['content'].enableEdit) {
+        this.$refs['content'].enableEdit();
+      } else {
+        this.isEdited = true;
+      }
     },
     setFocusedContent() {
       this.selectedContent = null;
@@ -310,7 +334,6 @@ export default {
       this.getState.focusedContent = {id: this.getUid, component: this};
     },
     focusContent(e) {
-
       // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
       if (this.editingContent && !this.isEditing) {
         this.focusedContent = null;
@@ -336,11 +359,6 @@ export default {
       this.isLabelBottom = rect.y < 20;
     },
     updateContents(val) {
-      this.value.contents = val;
-      this.$emit('input', this.value)
-      this.isSorting = false;
-    },
-    updateValue(val) {
       this.$emit('input', val);
     },
     move(arr, fromIndex, toIndex) {
@@ -349,76 +367,9 @@ export default {
       arr.splice(toIndex, 0, item);
     },
     initSorting() {
-
-      if (this.value.contents && this.value.contents.length) {
-
-        const _render = {vue: this};
-        const editor = this.$editor;
-
-        this.sortable = Sortable.create(this.$el, {
-          group: 'content-render',
-          ghostClass: 'ghost',
-          animation: 200,
-          onAdd: function (/**Event*/ evt) {
-            const point = {
-              type: 'add',
-              item: evt.item.getAttribute('data-id'),
-              from: evt.from.getAttribute('data-id'),
-              to: evt.to.getAttribute('data-id'),
-              oldIndex: evt.oldIndex,
-              newIndex: evt.newIndex
-            };
-            const contentValue = editor.getContentValueById(point.item);
-            _render.vue.value.contents.splice(point.newIndex, 0, contentValue)
-          },
-          onRemove: function (/**Event*/ evt) {
-            const point = {
-              type: 'remove',
-              item: evt.item.getAttribute('data-id'),
-              from: evt.from.getAttribute('data-id'),
-              to: evt.to.getAttribute('data-id'),
-              oldIndex: evt.oldIndex,
-              newIndex: evt.newIndex
-            };
-
-            if (_render.vue.$editor.keys.ctrl) {
-              console.log('복제하기')
-              const idRecreate = function (content) {
-                content.id = createUniqueId();
-                if (content.contents)
-                  content.contents.map(con => {
-                    idRecreate(con);
-                  });
-              }
-
-              const contentValue = cloneDeep(editor.getContentValueById(point.item));
-              console.log(contentValue)
-              idRecreate(contentValue);
-
-              _render.vue.$set(_render.vue.value.contents, point.oldIndex, contentValue)
-              _render.vue.$editor.refreshKey();
-
-              console.log('복제위해 새로운 데이터를 넣습니다.', contentValue, _render.vue.value);
-              return;
-            }
-
-            _render.vue.value.contents.splice(point.oldIndex, 1)
-
-          },
-          onUpdate: function (/**Event*/ evt) {
-            const point = {
-              type: 'update',
-              item: evt.item.getAttribute('data-id'),
-              from: evt.from.getAttribute('data-id'),
-              to: evt.to.getAttribute('data-id'),
-              oldIndex: evt.oldIndex,
-              newIndex: evt.newIndex
-            };
-
-            _render.vue.move(_render.vue.value.contents, point.oldIndex, point.newIndex)
-
-          }
-        })
+      if (this.value.contents) {
+        this.sortable = new SortableContent(this)
+        this.sortable.init();
       }
     }
   },
@@ -430,12 +381,12 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 .sortable-chosen {
   transition: all ease-in-out 0.3ms;
 }
 
-.ghost {
+.ghost, .vueuv-ghost {
   background-color: #e1e2e3;
   opacity: .5;
 }
@@ -444,6 +395,19 @@ export default {
   outline: #42b983 2px solid;
 }
 
+/*
+.is-selected:before{
+  content: attr(data-title);
+  position: absolute;
+  background-color: #42b983;
+  padding: 0.2rem 0.4rem;
+  z-index: 10;
+  color: white;
+  font-size: 9px;
+  transform: translate(-2px, -22px);
+
+}
+*/
 .is-editable {
   outline-color: orange;
 }

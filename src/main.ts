@@ -6,7 +6,6 @@ Vue.use(VueCompositionAPI)
 import Vueuv from "@/plugin";
 import TextContent from "@/Contents/TextContent.vue"
 import BasicImage from '@/Contents/BasicImage.vue'
-import InnerText from "@/Contents/InnerText.vue"
 
 /**
  * Set your plugins like below
@@ -15,7 +14,7 @@ Vue.use(Vueuv, {
     plugins:  [
         TextContent,
         BasicImage,
-        InnerText
+
     ]
 });
 

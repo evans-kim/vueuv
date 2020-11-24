@@ -1,4 +1,5 @@
-
+import {CombinedVueInstance} from "vue/types/vue";
+import Vue from "vue/types/umd";
 
 export interface ContentModel {
     tag: string;
@@ -10,16 +11,41 @@ export interface ContentModel {
     attrs?: object;
     contents?: Array<ContentModel>;
 }
-import Vue from 'vue';
 
-interface StatedContentRender{
+
+interface StatedContentRender {
     id: string;
-    component: Vue;
+    component: CombinedVueInstance<any, any, any, any, any>;
 }
 
-export interface EditorStates{
+export interface EditorStates {
+    dragBlock: object;
     selectedContent: object | null,
     focusedContent: StatedContentRender | null,
     editingContent: StatedContentRender | null,
-    isSorting: boolean
+    isSorting: boolean,
+}
+
+export interface Editor {
+    keys: { ctrl: boolean, alt: boolean };
+    config: { showGrid: boolean, mode: string };
+    states: EditorStates;
+
+    getContentValueById(id: string | null): CombinedVueInstance<any, any, any, any, any>;
+
+    refreshKey(): void;
+
+    hasDragBlock(): Boolean;
+
+    setRollBackPoint(): void;
+}
+
+export interface ContentRender extends Vue {
+    blocks: any;
+    $editor: Editor;
+    value: any;
+
+    move(contents: any, oldIndex: number, newIndex: number): void;
+
+    updateContents(value: any): void;
 }

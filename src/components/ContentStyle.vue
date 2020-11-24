@@ -1,11 +1,11 @@
 <template>
   <component :is="'style'" type="text/css">
-    {{ (rawCss) ? rawCss : parseContentStyles(content) }}
+    {{ parseContentStyles }}
   </component>
 </template>
 
 <script>
-import * as flatMapDeep from 'lodash/flatMapDeep';
+import * as flattenDeep from 'lodash/flattenDeep';
 export default {
   name: "ContentStyle",
   props: {
@@ -16,14 +16,21 @@ export default {
       type: String
     }
   },
-  methods: {
-    parseContentStyles(obj) {
-      const css = flatMapDeep(obj.contents, (o)=>{
-        return o.cssText || null;
+  computed:{
+    parseContentStyles() {
+      const deep = flattenDeep(this.getCssText(this.content.contents));
+
+      return [this.content.cssText, ...deep].join("\n\n");
+    }
+  },
+  methods:{
+    getCssText(contents){
+      return contents.map(content=>{
+        if(content.contents && content.contents.length){
+          return this.getCssText(content.contents)
+        }
+        return content.cssText || null;
       })
-
-      return [obj.cssText, ...css].filter(i=>i).join("\n\n");
-
     }
   }
 }

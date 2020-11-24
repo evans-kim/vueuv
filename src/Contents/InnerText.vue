@@ -1,9 +1,11 @@
 <template>
-  <div v-html="value" :contentEditable="isEdited" @click="$listeners.click" @mouseover="$listeners.mouseover" @dblclick="$listeners.dblclick"></div>
+  <div v-html="value" :contentEditable="isEdited" v-vueuv-content></div>
 </template>
 <script>
 export default {
   name: "InnerText",
+  label: "기본텍스트",
+  contentDefault:null,
   props: {
     value: {
       type: String
@@ -21,7 +23,6 @@ export default {
     },
     disableEdit() {
       const args = this.$el.innerHTML;
-      console.log(args);
       this.$emit('update:value', args);
       this.isEdited = false;
     },

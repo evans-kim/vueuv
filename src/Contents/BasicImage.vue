@@ -1,23 +1,34 @@
 <template>
-  <div v-if="isEdited" class="relative" v-on="$listeners">
-    <img :alt="alt" :src="src" />
+  <div v-if="isEdited" class="relative" v-vueuv-content.stop="{dblclick:(e)=>{ e.stopPropagation(); }}">
+    <img :alt="alt" :src="src"/>
 
-    <div class="absolute" :style="getEditorStyle">
+    <div class="absolute" :style="getEditorStyle" style=" height:80px; z-index: 100; background: rgba(0,0,0, .5)">
       <div class="flex justify-center items-center h-full p-2">
-        <label for="src" class="text-white">Source</label>
-        <input id="src" class="w-full" :value="src" @change="(e)=>{ $emit('update:src', e.target.value) }" />
+        <input id="src" class="w-full" :value="src" @change="(e)=>{ $emit('update:src', e.target.value) }"/>
+        <vu-button @click.stop="disableEdit"> Save</vu-button>
       </div>
     </div>
   </div>
-  <img v-else :alt="alt" :src="src" v-on="$listeners"/>
+  <img v-else :alt="alt" :src="src" v-vueuv-content/>
 </template>
 
 <script>
+import VuButton from "@/components/VuButton";
+
 export default {
-name: "BasicImage",
-  props:{
-    alt:String,
-    src:String
+  name: "BasicImage",
+  label: "이미지",
+  components: {VuButton},
+  contentDefault:{
+    class:['p-2'],
+    props:{
+      src:'https://via.placeholder.com/150',
+      alt:'Image'
+    }
+  },
+  props: {
+    alt: String,
+    src: String
   },
   data() {
     return {
@@ -36,10 +47,7 @@ name: "BasicImage",
   computed: {
     getEditorStyle() {
       return {
-        top: 0,
         width: this.$el.clientWidth + 'px',
-        height: this.$el.clientHeight + 'px',
-        background: 'rgba(0,0,0, .5)'
       }
     }
   }
