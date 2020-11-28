@@ -1,15 +1,13 @@
 <script>
 
-import CodeEditor from "@/components/CodeEditor";
-import createUniqueId from "@/lib/createUniqueId";
-import InnerText from "@/Contents/InnerText";
+import createUniqueId from "@/lib/createUniqueId.ts";
 import SortableContent from "@/lib/SortableContent";
-import * as cloneDeep from "lodash/cloneDeep"
+import cssToObject from 'css-to-object';
+import {cloneAll} from "@/lib/createUniqueId";
 
 export default {
   name: 'ContentRender',
   render(h) {
-
     const value = this.value;
     if (!value) {
       return;
@@ -17,7 +15,8 @@ export default {
     const SelectorEvents = {
       dblclick: this.activeContent,
       click: this.focusContent,
-      mouseover: this.selectContent
+      mouseover: this.selectContent,
+      'update:content': this.changingUpdate
     };
     const props = value.props || {};
     const keys = Object.keys(props);
@@ -47,23 +46,22 @@ export default {
       'data-id': this.getUid,
       'data-title': this.getTag
     };
-    const listeners = Object.assign(propsEvents, SelectorEvents);
+    const listeners = Object.assign(propsEvents, SelectorEvents, {'update:content': this.updateContents});
 
-    const attrs = Object.assign(value.attrs || {}, props, selectorAttrs);
+    const attrs = Object.assign(value.attrs || {}, selectorAttrs);
 
     const data = {
       class: [...value.class || [], ...this.selectorClass()],
-      style: value.style || {},
+      //style: value.style || {},
       attrs: attrs,
       props: props,
       on: listeners,
       ref: 'content',
-      key: value.id
+      key: value.id + 'render'
     };
 
     return h(tag, data, childrenNode)
   },
-  components: {InnerText, CodeEditor},
   inject: ['$editor'],
   props: {
     value: {
@@ -85,6 +83,9 @@ export default {
     }
   },
   computed: {
+    isContentRender() {
+      return true;
+    },
     getValue() {
       return this.value;
     },
@@ -99,7 +100,7 @@ export default {
         return this.getState.selectedContent;
       },
       set: function (component) {
-        if (this.isDragging) {
+        if (this.isSorting) {
           return false;
         }
         this.getState.selectedContent = component;
@@ -110,7 +111,7 @@ export default {
         return this.getState.focusedContent;
       },
       set: function (component) {
-        if (this.isDragging) {
+        if (this.isSorting) {
           return false;
         }
         this.getState.focusedContent = component;
@@ -137,17 +138,46 @@ export default {
         return this.getState.selectedElement;
       },
       set: function (component) {
-        if (this.isDragging) {
-          return false;
-        }
         this.getState.selectedElement = component;
       }
     },
+    contentStyleObject: {
+      get: function () {
+        if (this.value.cssObject) {
+          return this.value.cssObject;
+        } else {
+          this.$set(this.value, 'cssObject', {});
+        }
+        let media = "#" + this.value.id;
+        if (this.$editor.media.mobile) {
+          media = this.$editor.mediaQuery.mobile;
+        }
+        if (this.$editor.media.tablet) {
+          media = this.$editor.mediaQuery.tablet;
+        }
+
+        const obj = this.getCssTextToObject;
+
+        return obj[media] || {};
+      },
+      set: function (value) {
+        this.setCssObject(value);
+
+        this.value.cssText = this.objectToCss();
+        this.updateContentValue(this.value);
+      }
+    },
+    getCssTextToObject() {
+      return cssToObject(this.value.cssText || {}, {
+        camelCase: false,
+        numbers: false
+      })
+    },
     getClass() {
-      return [...this.value.class];
+      return [...this.value.class || [], ...this.selectorClass()];
     },
     getTag() {
-      return this.value.tag || 'text';
+      return this.value.tag || 'div';
     },
     contentId() {
       return this.value.id;
@@ -171,9 +201,6 @@ export default {
     getUid() {
       return this.value.id;
     },
-    getContent() {
-      return this.$refs['content']
-    },
     isStringType() {
       return typeof this.value === 'string';
     },
@@ -185,10 +212,88 @@ export default {
         return null;
       }
       return this.parent.value.contents.map(content => content.id).indexOf(this.value.id)
+    },
+    getCssObjectByMedia() {
+      if (!this.value) {
+
+        return {}
+      }
+      if (!this.value.cssObject) {
+        this.$set(this.value, 'cssObject', {});
+        return this.value.cssObject;
+      }
+      if (this.$editor.media.desktop) {
+        return this.value.cssObject['#' + this.value.id] || {};
+      }
+      let media = '';
+      if (this.$editor.media.mobile) {
+        media = this.$editor.mediaQuery.mobile;
+        return (this.value.cssObject[media]) ? this.value.cssObject[media]['#' + this.value.id] : {};
+      }
+      if (this.$editor.media.tablet) {
+        media = this.$editor.mediaQuery.tablet;
+        return (this.value.cssObject[media]) ? this.value.cssObject[media]['#' + this.value.id] : {};
+      }
+      return {};
     }
   },
   methods: {
+    attributeToCss(attribute, depth = 1) {
+      return Object.entries(attribute).map(([k, v]) => {
+        const spaces = "  ".repeat(depth);
+        if (typeof v === 'object') {
+          const toCss = this.attributeToCss(v, depth + 1);
+          return `${spaces}${k} {\n  ${toCss}\n  }\n`;
+        }
+        return `${spaces}${k}: ${v};\n`;
+      })
+    },
+
+    /**
+     * @param {CSSStyleDeclaration} style
+     */
+    setCssObject(style) {
+
+      const id = "#" + this.value.id;
+      let media = '';
+      if (this.$editor.media.mobile) {
+        media = this.$editor.mediaQuery.mobile;
+      }
+      if (this.$editor.media.tablet) {
+        media = this.$editor.mediaQuery.tablet;
+      }
+      const newStyle = {};
+      if (media) {
+        const obj = {};
+        const oldCssObject = cloneAll( this.value.cssObject );
+        if(!oldCssObject[media]){
+          obj[id] = style ;
+          newStyle[media] = obj;
+        }else{
+          newStyle[media]={};
+          newStyle[media][id] = Object.assign( {}, oldCssObject[media][id], style);
+        }
+      } else {
+        newStyle[id] = Object.assign(cloneAll(this.value.cssObject[id] || {}) , style);
+      }
+
+      this.$set(this.value, 'cssObject' , Object.assign(this.value.cssObject, newStyle));
+      this.$set(this.value, 'cssText', this.objectToCss());
+      this.changingUpdate();
+    },
+    objectToCss() {
+      if (!this.value.cssObject) return '';
+
+      const map = Object.entries(this.value.cssObject).map(([key, value]) => {
+        if (!value) {
+          return '';
+        }
+        return [key + "{\n", this.attributeToCss(value), "}\n"];
+      });
+      return map.join("").replace(/,/ig, '');
+    },
     getPropsEvents(keys) {
+
       return Object.fromEntries(keys.map((key) => {
         return ["update:" + key, (val) => {
 
@@ -197,18 +302,34 @@ export default {
         }];
       }));
     },
+    changingUpdate() {
+
+      this.$emit('update:content', Object.assign({}, this.value));
+      if (!this.parent) {
+        return;
+      }
+      //this.$set(this.parent.value.contents, this.getIndexFromParent, this.value);
+      this.parent.changingUpdate();
+    },
     updateContentValue(value) {
+      if (!this.parent) {
+        this.$emit('update:content', this.value);
+        return;
+      }
       this.$set(this.parent.value.contents, this.getIndexFromParent, value);
+
+      this.changingUpdate();
     },
     createChild(h, child) {
       return h('content-render', {props: {value: child, parent: this}, key: child.id});
     },
     selectorClass() {
       const classes = [];
-      if (this.isEditing) {
+
+      if (this.isEditing && this.$editor.config.showGuide) {
         classes.push('is-editable');
       }
-      if (this.isSelectedContent || this.isFocusedContent) {
+      if ((this.isSelectedContent || this.isFocusedContent) && this.$editor.config.showGuide) {
         classes.push('is-selected');
       }
       if (this.isLabelBottom) {
@@ -312,8 +433,6 @@ export default {
         component.$refs['content'].disableEdit(this);
       } else {
         this.isEdited = false;
-
-        this.$emit('update:value', component.$el.innerHTML);
       }
       this.getState.editingContent = null;
     },
@@ -359,7 +478,7 @@ export default {
       this.isLabelBottom = rect.y < 20;
     },
     updateContents(val) {
-      this.$emit('input', val);
+      this.updateContentValue(val);
     },
     move(arr, fromIndex, toIndex) {
       const item = arr[fromIndex];
@@ -367,7 +486,7 @@ export default {
       arr.splice(toIndex, 0, item);
     },
     initSorting() {
-      if (this.value.contents) {
+      if (this.value.contents || this.value.tag === 'div') {
         this.sortable = new SortableContent(this)
         this.sortable.init();
       }
@@ -378,6 +497,7 @@ export default {
   },
   mounted() {
     this.initSorting();
+
   }
 }
 </script>

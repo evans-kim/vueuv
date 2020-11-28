@@ -1,33 +1,39 @@
 <template>
   <div style="position: relative;" :class="getEditorClass" @click.stop="setDefaultSelect">
-    <menubar/>
-    <content-render ref="render" v-if="isEditable" :value="contentModel" @input="handleRenderInput"
-                    :key="renderKey"></content-render>
-    <content-exporter ref="exporter" v-if="!isEditable" :value="contentModel"></content-exporter>
-    <content-style ref="style" :content="contentModel" :raw-css="css"></content-style>
-    <helper ref="helper" @update:content-value="updateFocusedContent"></helper>
-    <pop-label :content="states.selectedContent" ref="selectLabel"/>
-    <pop-label :content="states.focusedContent" ref="label"/>
-    <pop-label :content="states.editingContent" color="orange" ref="label"/>
+    <menubar :key="menubarKey"/>
+    <inner-frame ref="frame"></inner-frame>
+    <template v-if="isEditable">
+      <helper ref="helper"></helper>
+      <pop-label :content="states.selectedContent" ref="selectLabel"/>
+      <pop-label :content="states.focusedContent" ref="label"/>
+      <pop-label :content="states.editingContent" color="orange" ref="label"/>
+      <template-saver ref="templateSaver"></template-saver>
+    </template>
     <div class="whitespace-pre">
       {{ contentModel }}
     </div>
+    <document :visible.sync="showDocument"></document>
   </div>
 </template>
 
 <script>
-import ContentStyle from "@/components/ContentStyle.vue";
-import ContentExporter from "@/components/ContentExporter.vue";
+
 import Helper from "@/components/Helper.vue";
 import Menubar from "@/components/Menubar";
-import createUid from "@/lib/createUniqueId";
+import createUid from "@/lib/createUniqueId.ts";
 import PopLabel from "@/components/PopLabel";
 import ContentRender from "@/components/ContentRender";
+import ContentExporter from "@/components/ContentExporter";
 import * as cloneDeep from "lodash/cloneDeep"
+import TemplateSaver from "@/components/TemplateSaver";
+import Vue from "vue";
+import InnerFrame from "@/components/InnerFrame";
+import Document from "@/components/Document";
 
 export default {
   name: "VueuvEditor",
-  components: {ContentRender, PopLabel, Menubar, Helper, ContentExporter, ContentStyle},
+  // eslint-disable-next-line vue/no-unused-components
+  components: {Document, InnerFrame, TemplateSaver, ContentRender, ContentExporter, PopLabel, Menubar, Helper},
   plugins: [],
   props: {
     html: {
@@ -45,22 +51,37 @@ export default {
     }
   },
   watch: {
-    config: {
+    media: {
       deep: true,
-      handler(val, old) {
-        this.transit = true;
-        setTimeout(() => {
-          this.transit = false;
-        }, 1000)
+      handler(media) {
+        if (media.mobile) {
+          this.frame.width = '480px';
+        }
+        if (media.desktop) {
+          this.frame.width = '100%';
+        }
+        if (media.tablet) {
+          this.frame.width = '1080px';
+        }
       }
     }
   },
   data() {
     return {
       transit: false,
+      frame: {
+        width: '100%',
+        height: '900px'
+      },
+      media: {
+        mobile: false,
+        tablet: false,
+        desktop: true
+      },
       config: {
-        mode: 'editable',
-        showGrid: false,
+        editable: true,
+        showGrid: true,
+        showGuide: true,
       },
       states: {
         selectedContent: null,
@@ -70,7 +91,8 @@ export default {
         dragBlock: null
       },
       contentModel: {
-        isRootContent:true,
+        id:'vueuv-content-root',
+        isRootContent: true,
         contents: []
       },
       logs: [],
@@ -78,7 +100,9 @@ export default {
         ctrl: false,
         alt: false,
       },
-      renderKey: 'default'
+      renderKey: 'default',
+      menubarKey: 'menubar',
+      showDocument: true
     }
   },
   provide() {
@@ -87,8 +111,24 @@ export default {
     }
   },
   computed: {
+    getRootRender(){
+      return this.$refs.frame.renderComponent;
+    },
+    getFrame(){
+      return this.$refs.frame.$el
+    },
+    mediaQuery() {
+      return {
+        mobile: '@media screen and (max-width: 480px)',
+        tablet: '@media screen and (max-width: 1080px)',
+        desktop: '#'
+      }
+    },
+    targetDocument() {
+      return this.$refs.frame.$el.contentWindow.document;
+    },
     isEditable() {
-      return this.config.mode === 'editable'
+      return this.config.editable;
     },
     hasEditingContent() {
       return !!this.states.editingContent
@@ -103,22 +143,25 @@ export default {
     hasDragBlock() {
       return !!this.states.dragBlock
     },
+    refreshMenu() {
+      this.menubarKey = createUid();
+    },
     refreshKey() {
       this.renderKey = createUid();
-      console.log(this.renderKey)
+
     },
     undo() {
       if (!this.logs.length) {
         return;
       }
       const rollback = this.logs.pop();
-      console.log(rollback);
+
       rollback();
       this.refreshKey();
     },
     setRollBackPoint() {
       const clone = cloneDeep(this.contentModel);
-      this.logs.push(()=>{
+      this.logs.push(() => {
         this.contentModel = clone;
       });
     },
@@ -128,15 +171,20 @@ export default {
       }
       this.logs.push(JSON.stringify(this.contentModel));
     },
-    updateContentById(id, value){
+    updateContentById(id, value) {
 
       let oldValue = this.getContentRenderById(id);
-      console.log(oldValue, value, oldValue === value);
+
       oldValue = value;
     },
     getContentValueById(id) {
-      return this.getContentRenderById(id, this.$refs.render).value || {};
+      const contentRenderById = this.getContentRenderById(id, this.getRootRender);
+      return contentRenderById.value || {};
     },
+    /**
+     * @param {string} id
+     * @param {ContentRender} vue
+     */
     getContentRenderById(id, vue) {
       if (!vue || typeof vue !== 'object') {
         return;
@@ -152,6 +200,18 @@ export default {
         }
       }
     },
+    exportHtml(){
+      this.config.editable = false;
+      this.$nextTick(()=>{
+        let width = parseInt( this.frame.width );
+        if(this.frame.width === '100%'){
+          width = window.innerWidth;
+        }
+        const myWindow = window.open("", "export", `width=${width},height=800px`);
+        myWindow.document.head.innerHTML = this.targetDocument.head.innerHTML;
+        myWindow.document.body.innerHTML = this.targetDocument.body.innerHTML;
+      })
+    },
     async showRawCode() {
       this.config.mode = 'export';
       const code = {
@@ -165,7 +225,7 @@ export default {
       this.$emit('input', code.html + `<style type="text/css">${code.css}</style>`);
     },
     getHtml() {
-      const ref = this.$refs['exporter'];
+      const ref = this.$refs.frame;
       return ref.$el.outerHTML
     },
     getCSS() {
@@ -208,6 +268,7 @@ export default {
         class: classes,
         style: {},
         cssText: null,
+        attrs: attrs,
         props: attrs,
       };
 
@@ -227,13 +288,12 @@ export default {
       //this.contentModel.contents = content.contents;
     },
     handleRenderInput(val) {
+
       this.contentModel = val;
+      this.refreshKey()
     },
     setDefaultSelect() {
       this.states.selectedContent = null;
-    },
-    updateFocusedContent(val) {
-      console.log('focusedContent', val);
     }
   },
   mounted() {
@@ -243,21 +303,15 @@ export default {
       target.style.display = 'none';
     }
 
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'MetaLeft') {
-        this.keys.ctrl = true;
-      }
+    this.targetDocument.addEventListener('keydown', (e) => {
+
       if (e.metaKey && e.key === 'z') {
         this.undo();
       }
     })
-
-    window.addEventListener('keyup', (e) => {
-
-      if (e.code === 'MetaLeft') {
-        this.keys.ctrl = false;
-      }
-    })
+  },
+  destroyed() {
+    //
   }
 }
 </script>

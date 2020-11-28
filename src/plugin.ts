@@ -1,26 +1,68 @@
-import Vue,{ ComponentOptions, VueConstructor, PluginObject} from "vue";
+import Vue, {ComponentOptions, VueConstructor, PluginObject} from "vue";
 
 import VueuvEditor from '@/components/VueuvEditor.vue';
 import InnerText from "@/Contents/InnerText.vue"
+import ContentExporter from "@/components/ContentExporter.vue";
+import ContentRender from "@/components/ContentRender.vue";
+import ContentStyle from "@/components/ContentStyle.vue";
+import Modal from "@/components/Modal.vue";
+import {CombinedVueInstance, ExtendedVue} from "vue/types/vue";
+import {ModalProp} from "@/types/VueuvTypes";
+
 interface VueuvOption {
     plugins: ComponentOptions<any>[];
 }
 
-interface ContentRenderMouseEvents{
+interface ContentRenderMouseEvents {
     click: Function;
     dblclick: Function;
     mouseover: Function;
 }
 
-
-declare module 'vue/types/vue' {
-    // 3. Vue에 보강할 내용을 선언하세요.
-    interface VueConstructor {
-        $vueuePlugins: Array<ComponentOptions<any>>;
-    }
-}
-
 export {VueuvEditor};
+
+
+export class ModalPlugin {
+
+    private Component: ExtendedVue<Vue, unknown, { hide(): void; exec(): void }, unknown, {
+        visible: boolean; body: string; yesButton: string; noButton: string; title: string;
+    }> = Vue.extend(Modal);
+
+    private options: ModalProp = {};
+    public instance?: any;
+
+    show(options: ModalProp) {
+
+        this.options = Object.assign(options, {visible:true});
+        return this.render();
+    }
+
+    render() {
+        return new Promise((resolve, reject) => {
+
+            this.instance = new this.Component({propsData: this.options});
+            this.instance.$on('update:visible', (value)=>{
+                this.instance.visible = false;
+
+            })
+            this.instance.$on('success', (event) => {
+                resolve(true);
+                setTimeout(()=>{
+                    this.instance.$destroy();
+                }, 1000)
+            })
+            this.instance.$on('fail', (event) => {
+                reject(false);
+                setTimeout(()=>{
+                    this.instance.$destroy();
+                }, 1000)
+            })
+            this.instance.$mount();
+            document.body.appendChild(this.instance.$el);
+        })
+    }
+
+}
 
 export default {
     install(Vue: VueConstructor, options: VueuvOption) {
@@ -39,11 +81,17 @@ export default {
                 }
                 Vue.component(option.name, option);
             });
-            //VueuvEditor.customContents = options.plugins;
+
             Vue.$vueuePlugins = options.plugins;
+            Vue.prototype.$vueuvModal = new ModalPlugin();
         }
+
         Vue.component(InnerText.name, InnerText);
+        Vue.component(ContentRender.name, ContentRender);
         Vue.component(VueuvEditor.name, VueuvEditor);
+        Vue.component(ContentStyle.name, ContentStyle);
+        Vue.component(ContentExporter.name, ContentExporter);
+
         /**
          * 커스텀 컴포넌트에 셀렉트에 필요한 이벤트를 추가하는 다이렉티브
          */

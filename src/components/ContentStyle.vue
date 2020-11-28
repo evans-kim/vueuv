@@ -8,6 +8,7 @@
 import * as flattenDeep from 'lodash/flattenDeep';
 export default {
   name: "ContentStyle",
+  inject: ['$editor'],
   props: {
     content: {
       type: Object
@@ -18,16 +19,18 @@ export default {
   },
   computed:{
     parseContentStyles() {
-      const deep = flattenDeep(this.getCssText(this.content.contents));
+      const cssTexts = this.getCssText(this.$editor.contentModel.contents);
 
-      return [this.content.cssText, ...deep].join("\n\n");
+      const deep = flattenDeep(cssTexts).filter(item=>item);
+
+      return [this.$editor.contentModel.cssText || null, ...deep].join("\n");
     }
   },
   methods:{
     getCssText(contents){
       return contents.map(content=>{
         if(content.contents && content.contents.length){
-          return this.getCssText(content.contents)
+          return [content.cssText, ...this.getCssText(content.contents)]
         }
         return content.cssText || null;
       })

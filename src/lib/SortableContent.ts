@@ -1,13 +1,17 @@
 import Sortable, {MultiDrag, Swap, OnSpill, AutoScroll} from "sortablejs";
 import {Editor, ContentRender} from "@/types/VueuvTypes";
 import * as cloneDeep from "lodash/cloneDeep"
-import createUid from "@/lib/createUniqueId.js"
+import createUid from "@/lib/createUniqueId.ts"
 
 
 export default class SortableContent {
     public vue: ContentRender;
     public options: Sortable.Options;
     private _sortable: Sortable | undefined;
+
+    get editor(): Editor {
+        return this.vue.$editor
+    }
 
     constructor(vue: ContentRender, options: Sortable.Options | undefined) {
         this.vue = vue;
@@ -44,9 +48,7 @@ export default class SortableContent {
         }
     }
 
-    get editor() {
-        return this.vue.$editor
-    }
+
 
     setEvent(name, func) {
         this.options[name] = event => {
@@ -77,17 +79,12 @@ export default class SortableContent {
             });
     }
 
-    addRollbackFunction() {
-
-        this.editor.setRollBackPoint();
-    }
-
     onStart(evt: Sortable.SortableEvent) {
-        this.vue.$editor.states.isSorting = true;
+        this.editor.states.isSorting = true;
     }
 
     onEnd(evt: Sortable.SortableEvent) {
-        this.vue.$editor.states.isSorting = false;
+        this.editor.states.isSorting = false;
     }
 
     onAdd(evt: Sortable.SortableEvent) {
@@ -99,7 +96,8 @@ export default class SortableContent {
         } else {
             contentValue = this.editor.getContentValueById(point.item);
         }
-        this.addRollbackFunction()
+
+        this.editor.setRollBackPoint()
         this.vue.value.contents.splice(point.newIndex, 0, contentValue)
 
         this.vue.updateContents(this.vue.value)
@@ -107,7 +105,7 @@ export default class SortableContent {
 
     onRemove(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'remove');
-        this.addRollbackFunction()
+        this.editor.setRollBackPoint()
         this.vue.value.contents.splice(point.oldIndex, 1)
 
         this.vue.updateContents(this.vue.value)
@@ -116,7 +114,7 @@ export default class SortableContent {
 
     onUpdate(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'update');
-        this.addRollbackFunction()
+        this.editor.setRollBackPoint()
         this.vue.move(this.vue.value.contents, point.oldIndex, point.newIndex)
 
         this.vue.updateContents(this.vue.value)

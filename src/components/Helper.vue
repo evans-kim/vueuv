@@ -17,16 +17,18 @@
           <button :class="activeClass('controller')" @click="activeTab = 'controller';"
                   class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Layout
           </button>
-          <button :class="activeClass('tree')" @click="activeTab = 'tree';"
-                  class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Structure
-          </button>
           <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
                   @click.stop="addContents">Add
           </button>
           <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
                   @click.stop="deleteContents">Remove
           </button>
-          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none" @click.stop="copy">Copy
+          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none" @click.stop="copy">
+            Copy
+          </button>
+          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
+                  @click.stop="keepAsTemplate">
+            Keep
           </button>
         </div>
         <div class="panel-body p-2 bg-white shadow rounded" style="max-width: 40rem;">
@@ -46,26 +48,16 @@
             <code-editor v-model="getTargetStyleText"></code-editor>
           </div>
           <div v-if="activeTab === 'controller'">
-            <vu-button @click="toggleDisplay"> flex</vu-button>
-            |
-            <vu-button @click="setStyle('justify-content', 'flex-start')"> left</vu-button>
-            <vu-button @click="setStyle('justify-content', 'center')"> center</vu-button>
-            <vu-button @click="setStyle('justify-content', 'flex-end')"> right</vu-button>
-            <vu-button @click="setStyle('justify-content', 'space-between')"> around</vu-button>
-            <vu-button @click="setStyle('justify-content', 'space-around')"> between</vu-button>
-            |
-            <vu-button @click="setStyle('align-items', 'flex-start')"> top</vu-button>
-            <vu-button @click="setStyle('align-items', 'baseline')"> Baseline</vu-button>
-            <vu-button @click="setStyle('align-items', 'center')"> center</vu-button>
-            <vu-button @click="setStyle('align-items', 'flex-end')"> bottom</vu-button>
-            <vu-button @click="setStyle('align-items', 'stretch')"> stretch</vu-button>
-            |
-            <vu-button @click="setStyle('flex-direction', 'row')"> Row</vu-button>
-            <vu-button @click="setStyle('flex-direction', 'column')"> Column</vu-button>
+            <div v-for="(group, idx) in Object.keys(control)" :key="'control'+idx">
+              <h4 class="text-lg bold py-1">{{ group }}</h4>
+              <vu-button v-for="(css , x) in control[group]" :key="'btn'+x" :color="hasStyle(group, control[group][x])" @click="setStyle(group, control[group][x])">
+                {{ css }}
+              </vu-button>
+            </div>
           </div>
-          <div v-if="activeTab === 'tree'" ref="structure" style="max-height: 300px; overflow-y: auto">
-            <content-tree v-model="$editor.contentModel.contents"></content-tree>
-          </div>
+        </div>
+        <div ref="structure" class="p-1 border shadow mt-2 bg-white" style="max-height: 300px; overflow-y: auto;">
+          <content-tree v-model="$editor.contentModel.contents"></content-tree>
         </div>
       </div>
     </div>
@@ -77,10 +69,9 @@
 import ClassTagInput from "@/components/ClassTagInput";
 import CodeEditor from "@/components/CodeEditor";
 import VuButton from "@/components/VuButton";
-import createUid from "@/lib/createUniqueId";
+import createUid from "@/lib/createUniqueId.ts";
 import ContentTree from "@/components/ContentTree";
-import {cloneContent} from "@/lib/createUniqueId";
-import * as cloneDeep from "lodash/cloneDeep"
+import {cloneContent} from "@/lib/createUniqueId.ts";
 
 export default {
   name: "Helper",
@@ -88,7 +79,7 @@ export default {
   components: {ContentTree, CodeEditor, ClassTagInput, VuButton},
   data() {
     return {
-      activeTab: 'tree',
+      activeTab: 'class',
       getStyle: {
         display: 'none',
         justifyContent: 'baseline',
@@ -103,42 +94,73 @@ export default {
       pointer: {
         x: 0,
         y: 0
+      },
+      isShowTemplate: false,
+      templateName: null,
+      control:{
+        display:['block','inline','flex','inline-block','flow-root'],
+        'justify-content': [
+          'center',
+          'flex-start',
+          'flex-end',
+          'space-between',
+          'space-around'
+        ],
+        'align-items':[
+          'flex-start',
+          'baseline',
+          'center',
+          'flex-end',
+          'stretch'
+        ],
+        'flex-direction':[
+            'row',
+            'column'
+        ]
       }
     }
   },
   watch: {
     activeTab(val) {
-      if (val === 'tree') {
-        this.$nextTick(() => {
-          //
-          this.scrollMoveToSelectedContent();
+      this.$nextTick(() => {
+        //
+        this.scrollMoveToSelectedContent();
 
-        })
-      }
+      })
     },
     contentFocused(element) {
       if (!this.isLayoutComponent) {
         this.hide();
         return;
       }
-      this.setPosition(document.getElementById(element.id));
+      this.setPosition(this.$editor.targetDocument.getElementById(element.id));
+      this.$nextTick(() => {
+        this.scrollMoveToSelectedContent();
+      })
+    },
+    focusedContentValue:{
+      deep: true,
+      handler(){
+        this.resetPosition();
+      }
     },
     isSorting() {
-      if (this.contentFocused) {
-        this.$nextTick(() => {
-
-          this.setPosition(document.getElementById(this.contentFocused.id))
-        })
-      }
+      this.resetPosition();
     }
   },
   computed: {
-
     focusedContent() {
       return (this.$editor.states.focusedContent) ? this.$editor.states.focusedContent.component : null;
     },
+    focusedContentValue() {
+      if (!this.focusedContent) return '';
+      return this.focusedContent.value;
+    },
     getTargetClasses() {
       return this.focusedContent.value.class || []
+    },
+    getStyleObject(){
+      return this.focusedContent.contentStyleObject;
     },
     getTargetStyleText: {
       get() {
@@ -169,13 +191,18 @@ export default {
     },
   },
   methods: {
+    resetPosition(){
+
+      if (this.contentFocused) {
+        this.$nextTick(() => {
+          this.setPosition(this.$editor.targetDocument.getElementById(this.contentFocused.id))
+          this.scrollMoveToSelectedContent();
+        })
+      }
+    },
     updateValue(value) {
       this.focusedContent.updateContentValue(value);
     },
-    hasOwn(obj, key) {
-      return Object.prototype.hasOwnProperty.call(obj, key);
-    },
-
     updateFocusedValue(value, key = null) {
       this.$editor.setRollBackPoint();
 
@@ -198,20 +225,25 @@ export default {
      * @param {HTMLElement} element
      */
     async setPosition(element) {
-      const editorRect = this.$editor.$el.getBoundingClientRect();
+      if(!element){
+        return;
+      }
+
+      const editorRect = this.$editor.getFrame.getBoundingClientRect();
+
       const rect = element.getBoundingClientRect();
       this.getStyle.display = 'absolute';
-      this.getStyle.left = rect.x + 'px';
+      this.getStyle.left = rect.x + editorRect.x + 'px';
       this.getStyle.right = 'auto';
 
-      this.getStyle.top = rect.y - editorRect.y + rect.height + 10 + 'px';
+      this.getStyle.top = rect.y + editorRect.y + rect.height + 10 + 'px';
       this.getStyle.display = 'flex'
       this.getStyle.opacity = 1;
       await this.$nextTick(() => {
         const me = this.$el.getBoundingClientRect();
         // 화면을 왼쪽으로 넘어 간다면?
         const number = window.innerWidth - (me.x + me.width) - 100;
-        if (number < 0) {
+        if (number < 0 ) {
           this.getStyle.left = "auto";
           this.getStyle.right = '20px';
         } else {
@@ -247,11 +279,25 @@ export default {
         return [];
       }
     },
-    setStyle(key, value) {
-      if (!this.focusedContent.value.style) {
-        this.$set(this.focusedContent.value, 'style', {});
+    hasStyle(key, value) {
+      const obj = this.focusedContent.getCssObjectByMedia
+
+      if (!obj)
+        return null;
+
+      if (!obj[key])
+        return null;
+
+      if (obj[key] === value){
+        return 'green';
       }
-      this.$set(this.focusedContent.value.style, key, value);
+
+      return null;
+    },
+    setStyle(key, value) {
+      const obj = {};
+      obj[key] = value;
+      this.focusedContent.setCssObject(obj);
     },
     toggleDisplay() {
       if (this.focusedContent.value.style && this.focusedContent.value.style.display === 'flex') {
@@ -270,9 +316,7 @@ export default {
               tag: 'div',
               id: createUid(),
               class: ['p-2'],
-              contents: [
-                '새로운 열'
-              ]
+              contents: []
             })
           }
         })
@@ -284,12 +328,10 @@ export default {
         tag: 'div',
         id: createUid(),
         class: ['p-2'],
-        contents: [
-          '새로운 행'
-        ]
+        contents: []
       });
-
       this.$editor.config.showGrid = true;
+      this.$editor.refreshKey();
 
     },
     deleteContents() {
@@ -309,7 +351,14 @@ export default {
       this.focusedContent.parent.value.contents.splice(i, 0, deep)
     },
     addIdSelectorToCssText() {
-      const cssText = "\n#" + this.focusedContent.value.id + "{\n  \n}";
+      let cssText = "#" + this.focusedContent.value.id + "{\n  \n}";
+      if(this.$editor.media.mobile){
+        cssText = "@media screen and (max-width: 600px){\n" +
+            "  #"+this.focusedContent.value.id+"{\n" +
+            "  \n" +
+            "  }\n" +
+            "}";
+      }
       if (this.focusedContent.value.cssText) {
         this.focusedContent.value.cssText += cssText;
       } else {
@@ -323,6 +372,9 @@ export default {
       } else {
         this.getTargetStyleText = cssText;
       }
+    },
+    keepAsTemplate() {
+      this.$editor.$refs['templateSaver'].show();
     }
   }
 }
@@ -330,11 +382,10 @@ export default {
 
 <style lang="scss" scoped>
 
-
 .helper-button {
   overflow: hidden;
   font-size: 1rem;
-  transition: all ease-in 0.2s;
+  transition: all ease-in 0.1s;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }

@@ -16,7 +16,7 @@ export default {
 
   computed: {
     getClass() {
-      return `m-1 mt-0 p-1 border rounded bg-${this.color}-200 cursor-pointer hover:bg-${this.color}-300 shadow inline`;
+      return `m-1 mt-0 p-1 rounded bg-${this.color}-400 text-white cursor-pointer hover:bg-${this.color}-300 shadow inline`;
     }
   }
 }

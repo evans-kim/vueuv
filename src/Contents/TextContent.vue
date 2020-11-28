@@ -78,7 +78,8 @@ export default {
       this.loadEditor();
     },
     disableEdit(){
-      this.$emit('update:value', this.editor.getContent() );
+      if(this.editor)
+        this.$emit('update:value', this.editor.getContent() );
       this.editor.hide();
     },
     async loadEditor(){
@@ -105,7 +106,7 @@ export default {
         inline_styles : true
         //content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
       });
-      console.log(editors)
+
       this.editor = editors[0];
     }
   },

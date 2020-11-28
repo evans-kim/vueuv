@@ -14,7 +14,6 @@ Vue.use(Vueuv, {
     plugins:  [
         TextContent,
         BasicImage,
-
     ]
 });
 

@@ -814,7 +814,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -831,7 +831,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -856,7 +856,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -881,7 +881,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -994,7 +994,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1019,7 +1019,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1044,7 +1044,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1096,7 +1096,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1121,7 +1121,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1146,7 +1146,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1179,7 +1179,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1204,7 +1204,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1256,7 +1256,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1281,7 +1281,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1306,7 +1306,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1331,7 +1331,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1383,7 +1383,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1408,7 +1408,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1460,7 +1460,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1485,7 +1485,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1510,7 +1510,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1562,7 +1562,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1587,7 +1587,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1639,7 +1639,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;
@@ -1664,7 +1664,7 @@ body {
   align-items: center;
   display: flex;
   height: 100%;
-  justify-content: start;
+  justify-content: flex-start;
   left: 0px;
   position: absolute;
   top: 0px;

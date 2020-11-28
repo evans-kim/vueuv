@@ -1,27 +1,22 @@
 <template>
-  <prism-editor v-on="$listeners" v-bind="$attrs" :highlight="highlighter" class="my-editor"></prism-editor>
+  <textarea :value="value" @change="handleInput" class="my-editor w-full" rows="10"></textarea>
 </template>
 
 <script>
-import { PrismEditor } from 'vue-prism-editor';
-import 'vue-prism-editor/dist/prismeditor.min.css'; // import the styles
-
-// import highlighting library (you can use any library you want just return html string)
-import { highlight, languages } from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-clike'
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-css';
-import 'prismjs/themes/prism-twilight.css'; // import syntax highlighting styles
 
 export default {
   name: "CodeEditor",
-  components:{
-    PrismEditor
+  props:{
+    value:{
+      type: String
+    }
   },
   methods: {
-    highlighter(code) {
-      return highlight(code, languages.js); // languages.<insert language> to return html with markup
-    },
+    handleInput(e){
+      const text =e.target.innerText
+
+      this.$emit('input', text)
+    }
   }
 }
 </script>
@@ -44,8 +39,4 @@ export default {
   padding: 5px;
 }
 
-/* optional class for removing the outline */
-.prism-editor__textarea:focus {
-  outline: none;
-}
 </style>

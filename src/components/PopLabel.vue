@@ -33,12 +33,12 @@ export default {
       if(!val){
         return;
       }
-      const editorRect = this.$editor.$el.getBoundingClientRect();
-      const rect = this.content.component.$el.getBoundingClientRect();
-      this.setBorder(rect)
 
-      this.tagStyle.top = rect.y - editorRect.y - 20 + 'px';
-      this.tagStyle.left = rect.x - editorRect.x - 2 + 'px' ;
+      const editorRect = this.$editor.$refs.frame.$el.getBoundingClientRect();
+      const rect = this.content.component.$el.getBoundingClientRect();
+
+      this.tagStyle.top = rect.y + editorRect.y - 10 + 'px';
+      this.tagStyle.left = rect.x + editorRect.x + 7 + 'px' ;
     }
   },
   computed:{
@@ -65,33 +65,6 @@ export default {
       leftBorder: {},
       rightBorder: {},
       bottomBorder: {}
-    }
-  },
-  methods:{
-    setBorder(rect){
-      this.topBorder.top = 18 + 'px';
-      this.topBorder.left = 0;
-      this.topBorder.height = 2+'px';
-      this.topBorder.width = rect.width + 'px';
-      this.topBorder.backgroundColor = this.color;
-
-      this.bottomBorder.top = 18 + rect.height + 'px';
-      this.bottomBorder.left = 0;
-      this.bottomBorder.height = 2 + 'px';
-      this.bottomBorder.width = rect.width + 'px';
-      this.bottomBorder.backgroundColor = this.color;
-
-      this.leftBorder.top = 18 + 'px';
-      this.leftBorder.left = 0;
-      this.leftBorder.height = rect.height + 'px';
-      this.leftBorder.width = 2 + 'px';
-      this.leftBorder.backgroundColor = this.color;
-
-      this.rightBorder.top = 18 + 'px';
-      this.rightBorder.left = rect.width + 'px';
-      this.rightBorder.height = rect.height + 2 + 'px';
-      this.rightBorder.width = 2 + 'px';
-      this.rightBorder.backgroundColor = this.color;
     }
   }
 }

@@ -1,38 +1,65 @@
 <template>
-  <div class="flex border shadow mb-4 p-2 bg-white">
-    <div class="bold text-2xl px-2">
+  <div class="flex border shadow p-2 bg-white">
+    <div class="bold text-2xl">
       Vueuv Editor
     </div>
-    <div class="flex" ref="sortable">
-      <div class="bg-white p-2 shadow-md border inline-block"
-           v-for="(block,i) in getBlocks" :key="i" :data-block-index="i"
-      > {{ block.label }}
+    <div class="mx-2">
+      Contents
+      <div class="flex" ref="sortable">
+        <div class="bg-white p-1 shadow-md border inline-block"
+             v-for="(block,i) in getBlocks" :key="i" :data-block-index="i"
+        > {{ block.label }}
+        </div>
       </div>
     </div>
-
-    <vu-button @click="toggleGrid">
-      <i class="icofont icofont-eye"></i>
-    </vu-button>
-    <vu-button @click="exportEditor">
-      <i class="icofont icofont-save"></i>
-    </vu-button>
-    <vu-button @click="undoContent">
-      <i class="icofont icofont-undo"></i>
-    </vu-button>
+    <div class="mx-2">
+      Media
+      <toggle-group v-model="$editor.media" unique></toggle-group>
+    </div>
+    <div class="mx-2">
+      Config
+      <toggle-group v-model="$editor.config"></toggle-group>
+    </div>
+    <div class="mx-2">
+      Action
+      <div>
+        <vu-button @click="exportEditor">
+          save
+        </vu-button>
+        <vu-button @click="undoContent">
+          undo
+        </vu-button>
+        <vu-button @click="()=>{ $editor.showDocument = true; }">
+          help
+        </vu-button>
+      </div>
+    </div>
+    <div class="mx-2">
+      Templates
+      <div class="flex items-center" ref="template">
+        <div  class="bg-white p-1 shadow-md border inline-block" @click="deleteTemplate(template)"
+             v-for="(template,i) in getTemplates" :key="'template'+i" :data-block-index="i"
+        > {{ template.label }}
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import createUid from "@/lib/createUniqueId";
+import createUid, {cloneContent} from "@/lib/createUniqueId.ts";
 import VuButton from "@/components/VuButton";
 import * as clone from "lodash/cloneDeep"
 import SortableContent from "@/lib/SortableContent";
 import Vue from 'vue';
+import LocalStore from "@/lib/LocalStore";
+import ToggleGroup from "@/components/ToggleGroup";
 
 export default {
   name: "Menubar",
   inject: ['$editor'],
   components: {
+    ToggleGroup,
     VuButton
   },
   computed: {
@@ -46,6 +73,10 @@ export default {
       set(val) {
         this.$editor.states.isSorting = val;
       }
+    },
+    getTemplates() {
+      const items = new LocalStore().getAll();
+      return items || [];
     }
   },
   methods: {
@@ -58,11 +89,7 @@ export default {
       return cloneDeep;
     },
     exportEditor() {
-      if (this.$editor.config.mode === 'editable') {
-        this.$editor.showRawCode();
-      } else {
-        this.$editor.config.mode = 'editable';
-      }
+      this.$editor.exportHtml();
     },
     undoContent() {
       this.$editor.undo();
@@ -80,20 +107,57 @@ export default {
           const block = clone(sortable.vue.getBlocks[index].contentDefault);
           block.id = createUid();
           block.tag = sortable.vue.camelToSnakeCase(sortable.vue.getBlocks[index].name).substring(1);
-          console.log(block);
-
-              sortable.vue.$editor.states.dragBlock = block;
+          sortable.editor.states.dragBlock = block;
         },
         onEnd() {
-          sortable.vue.$editor.states.dragBlock = null;
-          sortable.vue.$editor.refreshKey();
+          sortable.editor.states.dragBlock = null;
+          sortable.editor.refreshKey();
         }
       });
       sortable.init(this.$refs['sortable']);
+    },
+    initTemplateDraggable()
+    {
+      const sortable = new SortableContent(this, {
+        sort: true,
+        group: {name: 'content-render', pull: 'clone', put: false},
+        setData(dataTransfer, draggedElement) {
+          const index = draggedElement.getAttribute('data-block-index');
+          const template = sortable.vue.getTemplates[index];
+
+          sortable.editor.states.dragBlock = cloneContent(template.value);
+        },
+        onEnd() {
+          sortable.editor.states.dragBlock = null;
+          sortable.editor.refreshKey();
+        }
+      });
+      sortable.init(this.$refs['template']);
+    },
+    deleteTemplate(template) {
+      this.$vueuvModal.show({
+        color:'yellow',
+        title: '템플릿 삭제',
+        body: '"'+template.label+'" 을 삭제합니다.'
+      }).then(
+          ()=>{
+            this.$editor.$refs['templateSaver'].deleteTemplate(template);
+          }
+      )
+
+    },
+    toggleGuide() {
+      this.$editor.config.showGuide = !this.$editor.config.showGuide;
     }
   },
   mounted() {
     this.initSorting();
+    this.initTemplateDraggable();
+  },
+  data() {
+    return {
+      showDocument: false
+    }
   }
 }
 </script>

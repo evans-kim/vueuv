@@ -18,7 +18,7 @@ export default {
   },
   methods: {
     enableEdit() {
-      console.log('on')
+
       this.isEdited = true;
     },
     disableEdit() {

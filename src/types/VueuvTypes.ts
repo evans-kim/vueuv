@@ -7,11 +7,11 @@ export interface ContentModel {
     class?: string[];
     style?: object;
     cssText?: string;
+    cssObject?: object;
     props?: object;
     attrs?: object;
     contents?: Array<ContentModel>;
 }
-
 
 interface StatedContentRender {
     id: string;
@@ -20,22 +20,42 @@ interface StatedContentRender {
 
 export interface EditorStates {
     dragBlock: object;
-    selectedContent: object | null,
-    focusedContent: StatedContentRender | null,
-    editingContent: StatedContentRender | null,
-    isSorting: boolean,
+    selectedContent: object | null;
+    focusedContent: StatedContentRender | null;
+    editingContent: StatedContentRender | null;
+    isSorting: boolean;
+
+    refreshMenu(): void;
 }
 
 export interface Editor {
-    keys: { ctrl: boolean, alt: boolean };
-    config: { showGrid: boolean, mode: string };
+    keys: { ctrl: boolean; alt: boolean };
+    frame: {
+        width: string;
+        height: string;
+    }
+    mediaQuery: {
+        mobile: string;
+        tablet: string;
+        desktop: string;
+    }
+    media: {
+        mobile: boolean;
+        tablet: boolean;
+        desktop: boolean;
+    }
+    config: {
+        mode: string;
+        showGrid: boolean;
+        showGuide: boolean;
+    };
     states: EditorStates;
 
     getContentValueById(id: string | null): CombinedVueInstance<any, any, any, any, any>;
 
     refreshKey(): void;
 
-    hasDragBlock(): Boolean;
+    hasDragBlock(): boolean;
 
     setRollBackPoint(): void;
 }
@@ -44,8 +64,18 @@ export interface ContentRender extends Vue {
     blocks: any;
     $editor: Editor;
     value: any;
+    isContentRender?: boolean;
+    getValue: ContentModel;
 
     move(contents: any, oldIndex: number, newIndex: number): void;
 
     updateContents(value: any): void;
+}
+
+export interface ModalProp {
+    title?: string;
+    body?: string;
+    yesButton?: string;
+    noButton?: string;
+    visible?: boolean;
 }

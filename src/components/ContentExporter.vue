@@ -3,7 +3,7 @@ import Vue, {VNode} from "vue";
 import {ContentModel} from "@/types/VueuvTypes";
 import {CombinedVueInstance} from "vue/types/vue";
 
-export default Vue.extend({
+export default {
   name: "ContentExporter",
   props: {
     value: {
@@ -11,30 +11,27 @@ export default Vue.extend({
       required: true
     } as object | string
   } as any,
-  render(h){
+  render(h) {
+
     const vm = this as CombinedVueInstance<any, any, any, any, any>;
     const value = vm.value as string | ContentModel;
-    if(typeof value === 'string'){
+
+    if (typeof value === 'string') {
       return vm._v(value)
+
     } else {
 
       const children = value.contents || [];
-      const childrenNode = children.map((child: any, idx: any)=>{
-        return h('content-exporter', {props:{value:child}, key:idx})
+      const childrenNode = children.map((child: any, idx: any) => {
+        return h('content-exporter', {props: {value: child}, key: child.id})
       }) as VNode[];
 
-      return h(value.tag, {
+      return h(value.tag || 'div', {
         class: value.class || [],
-        style: value.style || {},
-        attrs: Object.assign(value.attrs || {}, value.props || {}),
+        attrs: Object.assign( {}, vm.$attrs, value.attrs ||{}, {id:value.id}),
         props: value.props || {},
-
-        }, childrenNode)
+      }, childrenNode)
     }
   }
-})
+}
 </script>
-
-<style scoped>
-
-</style>
