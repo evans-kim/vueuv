@@ -5,7 +5,7 @@
              handle=".node-handler"
              animation="300"
              :value="value"
-             @input="(val)=>{ $emit('input', val) }">
+             @input="handleValue">
     <li class="pl-3" v-for="(com, idx) in value" :key="idx">
       <div v-if="com && com.id" :class="{'selected-tag':isFocused(com.id)}" class="node" :style="getStyle(com)">
         <span class="node-handler p-2" @click.stop="setSelectedContentById(com.id)"
@@ -85,6 +85,10 @@ export default {
     },
     hasChildren(com) {
       return com.contents && com.contents.length;
+    },
+    handleValue(val){
+      this.$editor.setRollBackPoint();
+      this.$emit('input', val)
     }
   }
 }

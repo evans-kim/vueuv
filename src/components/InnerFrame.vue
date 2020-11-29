@@ -8,6 +8,11 @@ import Vue from "vue";
 export default {
   inject:['$editor'],
   name: "InnerFrame",
+  props:{
+    cleanStyle:{
+      type: Boolean
+    }
+  },
   data(){
     return{
       renderComponent:null
@@ -41,6 +46,9 @@ export default {
       }
       this.getFrame.document[target].appendChild(element);
     },
+    scrapLinks(){
+      return [...document.head.getElementsByTagName('link'), ...document.body.getElementsByTagName('link')];
+    },
     scrapStyles() {
       let str = '';
       Array.prototype.forEach.call(document.styleSheets, function (s) {
@@ -56,13 +64,21 @@ export default {
     lunch() {
       //헤더
       this.appendToHead('<meta name="viewport" content="width=device-width,initial-scale=1.0">');
+      if(!this.cleanStyle){
+        // 컴포넌트 CSS 적용
+        const str = this.scrapStyles();
+        const style = document.createElement('style');
+        style.setAttribute('type', 'text/css');
+        style.innerHTML = str;
+        this.appendToHead(style);
 
-      // 컴포넌트 CSS 적용
-      const str = this.scrapStyles();
-      const style = document.createElement('style');
-      style.setAttribute('type', 'text/css');
-      style.innerHTML = str;
-      this.appendToHead(style)
+        // 기존의 CSS를 가져 옵니다.
+        const links = this.scrapLinks();
+        links.map(link=>{
+          this.appendToHead(link);
+        })
+      }
+
       this.getFrame.document.body.style.margin = "4px";
 
 

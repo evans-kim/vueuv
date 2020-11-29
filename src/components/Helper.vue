@@ -353,7 +353,7 @@ export default {
     addIdSelectorToCssText() {
       let cssText = "#" + this.focusedContent.value.id + "{\n  \n}";
       if(this.$editor.media.mobile){
-        cssText = "@media screen and (max-width: 600px){\n" +
+        cssText = this.$editor.mediaQuery.mobile + "{\n" +
             "  #"+this.focusedContent.value.id+"{\n" +
             "  \n" +
             "  }\n" +
