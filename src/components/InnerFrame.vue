@@ -63,7 +63,7 @@ export default {
       return str;
     },
     lunch() {
-      console.log('lunched!');
+
       //헤더
       this.appendToHead('<meta name="viewport" content="width=device-width,initial-scale=1.0">');
 
@@ -86,8 +86,7 @@ export default {
         })
       }
 
-      this.getFrame.document.body.style.margin = "4px";
-
+      this.appendToBody("<div id='render-frame' style='margin: 5px;'></div>")
 
       const Editor = this.$editor;
 
@@ -100,18 +99,14 @@ export default {
         render(h) {
           const tagName = (Editor.config.editable) ? 'content-render' : 'content-exporter'
           return h('div', {}, [
-            h('content-style', {props: {content: Editor.contentModel}}),
             h(tagName, {
-              props: {value: Editor.contentModel},
-              on: {
-                'update:content': Editor.handleRenderInput
-              }
-            })
+              props: {value: Editor.contentModel}
+            }),
+            h('content-style')
           ]);
         }
-      }).$mount(this.$el.contentWindow.document.body);
+      }).$mount(this.$el.contentWindow.document.getElementById('render-frame'));
 
-      //this.appendToBody()
     },
     htmlToElement(html) {
       const template = document.createElement('template');

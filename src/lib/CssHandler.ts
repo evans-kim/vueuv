@@ -2,14 +2,15 @@ import {cloneAll} from "@/lib/createUniqueId";
 import {Editor} from "@/types/VueuvTypes";
 import Vue from "vue/types/umd";
 import cssToObject from 'css-to-object';
+import * as flattenDeep from 'lodash/flattenDeep';
 
 export default class CssHandler {
     private value: any;
     private $editor: Editor;
 
-    constructor(value, $editor) {
-        this.value = value
+    constructor($editor: Editor) {
         this.$editor = $editor;
+        this.value = $editor.contentModel
     }
 
     attributeToCss(attribute, depth = 1) {
@@ -80,5 +81,44 @@ export default class CssHandler {
 
     getCssObjectByMedia(media: string | 'mobile' | 'desktop' | 'tablet') {
         return this.value.cssObject[this.$editor.mediaQuery[media]]["#"+this.value.id];
+    }
+
+    toCssString(){
+        const cssTexts = this.getCssText(this.$editor.contentModel.contents);
+        const deep = flattenDeep(cssTexts).filter(item => item);
+        return [this.$editor.contentModel.cssText || null, ...deep].join("\n");
+    }
+    getCssText(contents) {
+        return contents.map(content => {
+            if (content.contents && content.contents.length) {
+                return [content.cssText, ...this.getCssText(content.contents)]
+            }
+            return content.cssText || null;
+        })
+    }
+    toResponsivelyCssString(){
+        const cssTexts = this.getCssTextResponsive(this.$editor.contentModel.contents);
+    }
+    getCssTextResponsive(contents) {
+        return contents.map(content => {
+            if (content.contents && content.contents.length) {
+                return [content.cssObject, ...this.getCssTextResponsive(content.contents)]
+            }
+            return content.cssObject || null;
+        })
+    }
+    objectToCssByMedia(content) {
+        if (!content.cssObject) return '';
+        const media = this.$editor.getCurrentMedia
+        if(media === 'desktop'){
+            return '';
+        }
+        const map = Object.entries(content.cssObject[this.$editor.mediaQuery[media]]).map(([key, value]) => {
+            if (!value) {
+                return '';
+            }
+            return [key + "{\n", this.attributeToCss(value), "}\n"];
+        });
+        return map.join("").replace(/,/ig, '');
     }
 }

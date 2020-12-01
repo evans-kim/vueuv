@@ -1,6 +1,6 @@
 <template>
   <transition name="modal" appear>
-    <div class="fixed z-10 inset-0 overflow-y-auto opacity-100" v-if="visible">
+    <div class="fixed z-20 inset-0 overflow-y-auto opacity-100" v-if="visible">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity">
           <div class="absolute inset-0 bg-gray-800 opacity-75"></div>

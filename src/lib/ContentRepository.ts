@@ -7,41 +7,26 @@ import Vue from "vue";
 class ContentRepository {
     private model: ContentModel;
 
-    constructor(model:ContentModel) {
+    constructor(model: ContentModel) {
         this.model = model;
     }
 
-    addDivContent(){
-        if(!this.model.contents){
-            return []
-        }
-        const key = createUid();
-
-        Vue.set(this.model, key, {
-            id: key,
-            tag: 'div',
-            class:['p-2'],
-            contents: {}
-        });
-    }
-    contentsEntries(){
-        if(!this.model.contents){
-            return []
-        }
-        return Object.entries(this.model.contents)
-    }
-    toClone(){
-        const cloned = cloneDeep(this.model);
+    create(model) {
 
     }
-    clone(content:ContentModel){
+
+    toClone() {
+        return cloneDeep(this.model);
+    }
+
+    clone(content: ContentModel) {
 
         content.id = createUid();
-        if(!content.cssObject){
+        if (!content.cssObject) {
             Vue.set(content, 'cssObject', {});
         }
-        if( content.cssText ){
-            content.cssText = content.cssText.replace(/#.*{?/ig, "#"+content.id+" {")
+        if (content.cssText) {
+            content.cssText = content.cssText.replace(/#.*{?/ig, "#" + content.id + " {")
             const value = cssToObject(content.cssText, {
                 camelCase: false,
                 numbers: false

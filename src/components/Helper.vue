@@ -1,34 +1,38 @@
 <template>
-    <div v-if="isLayoutComponent" v-show="!isSorting" :style="getStyle">
+    <div v-if="isLayoutComponent" :style="getStyle">
       <div class="m-2">
         <div class="flex">
           <label>
             <input type="range" v-model="getStyle.opacity" min="0.1" max="1" step="0.01">
           </label>
         </div>
-        <div class="flex justify-start mb-1">
-          <button :class="activeClass('class')" @click="activeTab = 'class';"
-                  class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Class
-          </button>
-          <button :class="activeClass('style')" @click="activeTab = 'style';"
-                  class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Style
-          </button>
-          <button :class="activeClass('controller')" @click="activeTab = 'controller';"
-                  class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Layout
-          </button>
-          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
-                  @click.stop="addContents">Add
-          </button>
-          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
-                  @click.stop="deleteContents">Remove
-          </button>
-          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none" @click.stop="copy">
-            Copy
-          </button>
-          <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
-                  @click.stop="keepAsTemplate">
-            Keep
-          </button>
+        <div class="flex justify-between mb-1">
+          <div>
+            <button :class="activeClass('class')" @click="activeTab = 'class';"
+                    class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Class
+            </button>
+            <button :class="activeClass('style')" @click="activeTab = 'style';"
+                    class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Style
+            </button>
+            <button :class="activeClass('controller')" @click="activeTab = 'controller';"
+                    class="helper-button rounded border mr-1 bg-white shadow focus:outline-none">Layout
+            </button>
+          </div>
+          <div>
+            <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
+                    @click.stop="addContents">Add
+            </button>
+            <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
+                    @click.stop="deleteContents">Remove
+            </button>
+            <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none" @click.stop="copy">
+              Copy
+            </button>
+            <button class="helper-button rounded border mr-1 bg-white shadow focus:outline-none"
+                    @click.stop="keepAsTemplate">
+              Keep
+            </button>
+          </div>
         </div>
         <div class="panel-body p-2 bg-white shadow rounded" style="max-width: 40rem;">
           <div v-if="activeTab === 'class'">
@@ -84,12 +88,12 @@ export default {
         display: 'none',
         justifyContent: 'baseline',
         position: 'absolute',
-        padding: '0.5rem',
         left: 0,
         right: 'auto',
         top: 0,
         zIndex: 10,
-        opacity: 1
+        opacity: 1,
+        transition: 'all ease-in-out 0.2s'
       },
       pointer: {
         x: 0,
@@ -121,18 +125,23 @@ export default {
     }
   },
   watch: {
-    getStyleObject:{
-      deep:true,
-      handler(){
-        //
+    editorMedia(media){
+      if(!this.contentFocused){
+        return ;
       }
+      this.$nextTick(() => {
+        setTimeout(()=>{
+          this.setPosition(this.contentFocused.component.$el);
+          this.scrollMoveToSelectedContent();
+        },400)
+      })
     },
     contentFocused(element) {
       if (!this.isLayoutComponent) {
         this.hide();
         return;
       }
-      this.setPosition(this.$editor.targetDocument.getElementById(element.id));
+      this.setPosition(element.component.$el);
       this.$nextTick(() => {
         this.scrollMoveToSelectedContent();
       })
@@ -158,18 +167,15 @@ export default {
     getTargetClasses() {
       return this.focusedContent.value.class || []
     },
-    getStyleObject(){
-      if(!this.focusedContent){
-        return {};
-      }
-      return this.focusedContent.contentStyleObject;
+    editorMedia(){
+      return this.$editor.getCurrentMedia
     },
     getTargetStyleText: {
       get() {
         return this.focusedContent.value.cssText || ''
       },
       set(value) {
-        console.log(value, 'getTargetStyleText - set');
+
         const object = cssToObject(value||'', {
           camelCase: false,
           numbers: false
@@ -203,7 +209,7 @@ export default {
 
       if (this.contentFocused) {
         this.$nextTick(() => {
-          this.setPosition(this.$editor.targetDocument.getElementById(this.contentFocused.id))
+          this.setPosition(this.contentFocused.component.$el)
           this.scrollMoveToSelectedContent();
         })
       }
@@ -236,16 +242,17 @@ export default {
       if(!element){
         return;
       }
+      await this.$nextTick();
 
-      const editorRect = this.$editor.$refs.frame.$el.getBoundingClientRect();
+
+      const editorRect = this.$editor.$el.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
-      const winY = window.scrollY;
 
       this.getStyle.display = 'absolute';
       this.getStyle.left = rect.x + editorRect.x + 'px';
       this.getStyle.right = 'auto';
 
-      this.getStyle.top = rect.y + editorRect.y + rect.height + winY + 10 + 'px';
+      this.getStyle.top = rect.y + editorRect.y + rect.height + 20 + 'px';
       this.getStyle.display = 'flex'
       this.getStyle.opacity = 1;
       await this.$nextTick(() => {
@@ -319,31 +326,43 @@ export default {
       if (!this.focusedContent.value.contents) {
         this.focusedContent.parent.value.contents.map((item, index) => {
           if (item.id === this.focusedContent.value.id) {
-            this.focusedContent.parent.value.contents.splice(index + 1, 0, {
+            this.focusedContent.parent.value.contents.splice(index + 1, 0, cloneContent({
               tag: 'div',
               id: createUid(),
               class: ['p-2'],
               contents: []
-            })
+            }))
           }
         })
         this.$editor.config.showGrid = true;
         this.$editor.refreshKey();
         return;
       }
-      this.$set(this.focusedContent.value.contents, this.focusedContent.value.contents.length, {
+      this.$set(this.focusedContent.value.contents, this.focusedContent.value.contents.length, cloneContent({
         tag: 'div',
         id: createUid(),
         class: ['p-2'],
         contents: []
-      });
+      }));
       this.$editor.config.showGrid = true;
-      this.$editor.refreshKey();
-
+      if(this.focusedContent.parent)
+        this.focusedContent.parent.changingUpdate();
+      else
+        this.focusedContent.changingUpdate();
     },
     deleteContents() {
       this.$editor.setRollBackPoint();
-      this.focusedContent.deleteContent();
+      let i = 0;
+      this.focusedContent.parent.value.contents.map((content, index) => {
+        if (this.focusedContent.value === content) {
+          i = index;
+        }
+      })
+      this.focusedContent.parent.value.contents.splice(i, 1)
+      if(this.focusedContent.parent)
+        this.focusedContent.parent.changingUpdate();
+      else
+        this.focusedContent.changingUpdate();
     },
     copy() {
       this.$editor.setRollBackPoint();
@@ -356,6 +375,7 @@ export default {
       const deep = cloneContent(this.focusedContent.value);
 
       this.focusedContent.parent.value.contents.splice(i, 0, deep)
+      this.focusedContent.parent.refreshValue();
     },
     addIdSelectorToCssText() {
       let cssText = "#" + this.focusedContent.value.id + "{\n  \n}";

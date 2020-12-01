@@ -73,14 +73,16 @@ export default {
       if (!id) {
         return;
       }
-      const contentRender = this.$editor.getContentRenderById(id, this.$editor.getRootRender);
+
+      const contentRender = this.$editor.getContentRenderById(id, this.$editor.$refs.render);
+
       contentRender.setFocusedContent();
     },
     setEditingContentById(id) {
       if (!id) {
         return;
       }
-      const contentRender = this.$editor.getContentRenderById(id, this.$editor.getRootRender);
+      const contentRender = this.$editor.getContentRenderById(id, this.$editor.$refs.render);
       contentRender.setEditingContent();
     },
     hasChildren(com) {

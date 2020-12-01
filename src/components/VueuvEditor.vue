@@ -1,14 +1,17 @@
 <template>
   <div style="position: relative;" :class="getEditorClass" @click.stop="setDefaultSelect">
     <menubar :key="menubarKey"/>
-    <inner-frame ref="frame"></inner-frame>
+    <div ref="responseFrame" :style="getRenderSectionStyle">
+      <content-render ref="render" v-if="isEditable" :value="contentModel" @update:content="handleRenderInput"></content-render>
+      <inner-frame v-else ref="exporter"></inner-frame>
+      <!-- 익스포트를 아이프레임 속에 넣으면 될 듯 -->
+    </div>
     <template v-if="isEditable">
-      <helper ref="helper"></helper>
-      <pop-label :content="states.selectedContent" ref="selectLabel"/>
-      <pop-label :content="states.focusedContent" ref="label"/>
-      <pop-label :content="states.editingContent" color="orange" ref="label"/>
       <template-saver ref="templateSaver"></template-saver>
+      <helper ref="helper"></helper>
     </template>
+
+    <content-style></content-style>
     <div class="whitespace-pre">
       {{ contentModel }}
     </div>
@@ -21,18 +24,14 @@
 import Helper from "@/components/Helper.vue";
 import Menubar from "@/components/Menubar";
 import createUid from "@/lib/createUniqueId.ts";
-import PopLabel from "@/components/PopLabel";
-import ContentRender from "@/components/ContentRender";
-import ContentExporter from "@/components/ContentExporter";
 import * as cloneDeep from "lodash/cloneDeep"
 import TemplateSaver from "@/components/TemplateSaver";
-import InnerFrame from "@/components/InnerFrame";
 import Document from "@/components/Document";
+import InnerFrame from "@/components/InnerFrame";
 
 export default {
   name: "VueuvEditor",
-  // eslint-disable-next-line vue/no-unused-components
-  components: {Document, InnerFrame, TemplateSaver, ContentRender, ContentExporter, PopLabel, Menubar, Helper},
+  components: {InnerFrame, Document, TemplateSaver, Menubar, Helper},
   plugins: [],
   props: {
     html: {
@@ -110,12 +109,19 @@ export default {
     }
   },
   computed: {
+    getCurrentMedia(){
+      if(this.media.mobile){
+        return 'mobile'
+      }
+      if(this.media.tablet){
+        return 'tablet'
+      }
+      return 'desktop'
+    },
     getRootRender(){
-      return this.$refs.frame.renderComponent;
+      return this.$refs.render;
     },
-    getFrame(){
-      return this.$refs.frame.$el
-    },
+
     mediaQuery() {
       return {
         mobile: '@media screen and (max-width: 480px)',
@@ -123,9 +129,7 @@ export default {
         desktop: '#'
       }
     },
-    targetDocument() {
-      return this.$refs.frame.$el.contentWindow.document;
-    },
+
     isEditable() {
       return this.config.editable;
     },
@@ -136,6 +140,27 @@ export default {
       return {
         'fade-in-out-leave-active': this.transit
       }
+    },
+    getRenderSectionStyle() {
+      const style = {
+        'transition' : 'all 0.3s ease-in-out'
+      };
+      if(this.media.desktop){
+        style['width'] = '100%';
+        style['margin-left'] = 'auto';
+        style['margin-right'] = 'auto';
+      }
+      if(this.media.mobile){
+        style['width'] = '480px';
+        style['margin-left'] = 'auto';
+        style['margin-right'] = 'auto';
+      }
+      if(this.media.tablet){
+        style['width'] = '1020px';
+        style['margin-left'] = 'auto';
+        style['margin-right'] = 'auto';
+      }
+      return style;
     }
   },
   methods: {
@@ -146,7 +171,7 @@ export default {
       this.menubarKey = createUid();
     },
     refreshKey() {
-      console.log('refresh Key');
+
       this.$nextTick(()=>{
         //this.renderKey = createUid();
       })
@@ -189,12 +214,15 @@ export default {
      */
     getContentRenderById(id, vue) {
       if (!vue || typeof vue !== 'object') {
+        console.warn('this is not vue component');
         return;
       }
+
       if (vue.contentId === id) {
         return vue;
       }
       let result;
+
       for (let i = 0; i < vue.$children.length; i++) {
         result = this.getContentRenderById(id, vue.$children[i])
         if (result) {
@@ -210,8 +238,10 @@ export default {
           width = window.innerWidth;
         }
         const myWindow = window.open("", "export", `width=${width},height=800px`);
-        myWindow.document.head.innerHTML = this.targetDocument.head.innerHTML;
-        myWindow.document.body.innerHTML = this.targetDocument.body.innerHTML;
+        const docu = this.$refs.exporter.$el.contentWindow.document;
+
+        myWindow.document.head.innerHTML = docu.head.innerHTML;
+        myWindow.document.body.innerHTML = docu.body.innerHTML;
       })
     },
     async showRawCode() {
@@ -303,7 +333,7 @@ export default {
       target.style.display = 'none';
     }
 
-    this.targetDocument.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', (e) => {
 
       if (e.metaKey && e.key === 'z') {
         this.undo();

@@ -18,7 +18,11 @@ export interface ContentModel {
     class?: string[];
     style?: object;
     cssText?: string;
-    cssObject?: object;
+    cssObject?: {
+        desktop: object;
+        tablet: object;
+        mobile: object;
+    };
     props?: object;
     attrs?: object;
     contents?: Array<ContentModel>;
@@ -40,6 +44,7 @@ export interface EditorStates {
 }
 
 export interface Editor {
+    getCurrentMedia: 'desktop' | 'mobile' | 'tablet';
     keys: { ctrl: boolean; alt: boolean };
     frame: {
         width: string;
@@ -56,10 +61,11 @@ export interface Editor {
         desktop: boolean;
     }
     config: {
-        mode: string;
+        editable: boolean;
         showGrid: boolean;
         showGuide: boolean;
     };
+    contentModel: any;
     states: EditorStates;
 
     getContentValueById(id: string | null): CombinedVueInstance<any, any, any, any, any>;

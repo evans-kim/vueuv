@@ -8,7 +8,7 @@ export default function createUid() {
 }
 
 export function idRecreate(content: ContentModel) {
-
+    const oldId = content.id;
     content.id = createUid();
     if(!content.class){
         Vue.set(content, 'class', []);
@@ -18,12 +18,8 @@ export function idRecreate(content: ContentModel) {
     }
     if( content.cssText ){
         content.cssText = content.cssText.replace(/#.*{?/ig, "#"+content.id+" {")
-        const value = cssToObject(content.cssText, {
-            camelCase: false,
-            numbers: false
-        });
-
-        Vue.set(content, 'cssObject', value);
+    }else{
+        Vue.set(content, 'cssText', '');
     }
     if (content.contents && content.contents.length) {
         content.contents.map(con => {

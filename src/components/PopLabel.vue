@@ -34,11 +34,10 @@ export default {
         return;
       }
 
-      const editorRect = this.$editor.$refs.frame.$el.getBoundingClientRect();
+      const editorRect = this.$editor.$el.getBoundingClientRect();
       const rect = this.content.component.$el.getBoundingClientRect();
-      const winY = window.scrollY;
 
-      this.tagStyle.top = rect.y + editorRect.y + winY - 10 + 'px';
+      this.tagStyle.top = rect.y + editorRect.y - 10 + 'px';
       this.tagStyle.left = rect.x + editorRect.x + 7 + 'px' ;
     }
   },

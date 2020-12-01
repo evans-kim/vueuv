@@ -129,7 +129,7 @@ export default {
         },
         onEnd() {
           sortable.editor.states.dragBlock = null;
-          console.log(sortable.editor.states.dragBlock);
+
         }
       });
       sortable.init(this.$refs['template']);

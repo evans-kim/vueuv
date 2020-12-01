@@ -28,7 +28,7 @@ export default {
 
     const children = value.contents || [];
 
-    const childrenNode = children.forEach((child) => {
+    const childrenNode = children.map((child) => {
       if (typeof child === 'string') {
         return child;
       }
@@ -52,7 +52,7 @@ export default {
 
     const data = {
       class: [...value.class || [], ...this.selectorClass()],
-      //style: value.style || {},
+      //style: (value.cssObject) ? value.cssObject.desktop||{} : {},
       attrs: attrs,
       props: props,
       on: listeners,
@@ -152,9 +152,14 @@ export default {
           media = this.$editor.mediaQuery.tablet;
         }
         if (this.value.cssObject) {
-          return this.value.cssObject[media];
+          return this.value.cssObject[this.$editor.getCurrentMedia];
         }
-        this.$set(this.value, 'cssObject', {});
+
+        this.$set(this.value, 'cssObject', {
+          desktop: {},
+          tablet : {},
+          mobile : {}
+        });
 
         const obj = this.getCssTextToObject;
 
@@ -162,8 +167,6 @@ export default {
       },
       set: function (value) {
         this.setCssObject(value);
-
-        this.value.cssText = this.objectToCss();
         this.updateContentValue(this.value);
       }
     },
@@ -255,31 +258,13 @@ export default {
     setCssObject(style) {
 
       const id = "#" + this.value.id;
-      let media = '';
-      if (this.$editor.media.mobile) {
-        media = this.$editor.mediaQuery.mobile;
-      }
-      if (this.$editor.media.tablet) {
-        media = this.$editor.mediaQuery.tablet;
-      }
+      const media = this.$editor.getCurrentMedia;
       const newStyle = {};
-      if (media) {
-        const obj = {};
-        const oldCssObject = cloneAll( this.value.cssObject );
-        if(!oldCssObject[media]){
-          obj[id] = style ;
-          newStyle[media] = obj;
-        }else{
-          newStyle[media]={};
-          newStyle[media][id] = Object.assign( {}, oldCssObject[media][id], style);
-        }
-      } else {
-        newStyle[id] = Object.assign(cloneAll(this.value.cssObject[id] || {}) , style);
-      }
+      this.value.cssObject[media] = Object.assign({}, cloneAll(this.value.cssObject[media]), style);
 
       this.$set(this.value, 'cssObject' , Object.assign({}, this.value.cssObject, newStyle));
-      this.$set(this.value, 'cssText', this.objectToCss());
-      this.changingUpdate();
+
+      this.$emit('update:content', cloneAll(this.value));
     },
     objectToCss() {
       if (!this.value.cssObject) return '';
@@ -302,6 +287,9 @@ export default {
         }];
       }));
     },
+    refreshValue(){
+      this.$emit('update:content', cloneAll(this.value));
+    },
     changingUpdate() {
       this.$emit('update:content', cloneAll(this.value));
       if(this.parent){
@@ -310,7 +298,7 @@ export default {
     },
     updateContentValue(value) {
       /*if (!this.parent) {
-        console.log( this.$editor.contentModel === this.value )
+
         this.$emit('update:content', cloneAll(this.value));
         return;
       }
@@ -361,6 +349,7 @@ export default {
       this.focusedContent = null;
       this.editingContent = null;
       this.selectedContent = null;
+      this.parent.refreshValue();
     },
     getDataIdFrom(event) {
       return event.target.getAttribute('data-id');
@@ -406,6 +395,33 @@ export default {
       });
       event.stopPropagation();
     },
+    focusContent(e) {
+      // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
+      if (this.editingContent && !this.isEditing) {
+        this.focusedContent = null;
+        this.selectedContent = null;
+        this.unsetEditingContent();
+      }
+
+      if (this.focusedContent && this.focusedContent.id === this.contentId) {
+        this.focusedContent = null;
+        this.selectedContent = null;
+      } else {
+        if (e.target !== this.$el) {
+          const parentContentRender = this.getParentContentRender(e.target);
+
+          if (parentContentRender) {
+            this.focusedContent = {id: this.contentId, component: this};
+            e.stopPropagation();
+            return;
+          }
+        }
+        this.focusedContent = {id: this.getDataIdFrom(e), component: this};
+        this.selectedContent = null;
+      }
+
+      e.stopPropagation();
+    },
     activeContent(e) {
 
       if (this.isEditing) {
@@ -448,24 +464,7 @@ export default {
       this.editingContent = null;
       this.getState.focusedContent = {id: this.getUid, component: this};
     },
-    focusContent(e) {
-      // 이전에 수정중인 컨덴츠가 있다면 비활성화 합니다.
-      if (this.editingContent && !this.isEditing) {
-        this.focusedContent = null;
-        this.selectedContent = null;
-        this.unsetEditingContent();
-      }
 
-      if (this.focusedContent && this.focusedContent.id === this.contentId) {
-        this.focusedContent = null;
-        this.selectedContent = null;
-      } else {
-        this.selectedContent = null;
-        this.focusedContent = {id: this.getDataIdFrom(e), component: this};
-      }
-
-      e.stopPropagation();
-    },
     createUid() {
       return createUniqueId();
     },
@@ -497,7 +496,7 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
+<style>
 .sortable-chosen {
   transition: all ease-in-out 0.3ms;
 }

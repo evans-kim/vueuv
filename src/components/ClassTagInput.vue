@@ -57,9 +57,9 @@ export default {
   },
   methods: {
     inputHandler(e) {
-      const value = e.target.value;
-      this.$emit('input', uniq([...this.value, value].filter(item=>item)));
-      e.target.value = '';
+
+      this.$emit('input', uniq([...this.value, this.temp].filter(item=>item)));
+      this.temp = '';
 
     },
     removeItem(idx) {
