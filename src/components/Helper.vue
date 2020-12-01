@@ -1,5 +1,4 @@
 <template>
-  <transition name="fade-in-out" mode="out-in">
     <div v-if="isLayoutComponent" v-show="!isSorting" :style="getStyle">
       <div class="m-2">
         <div class="flex">
@@ -48,7 +47,7 @@
             <code-editor v-model="getTargetStyleText"></code-editor>
           </div>
           <div v-if="activeTab === 'controller'">
-            <div v-for="(group, idx) in Object.keys(control)" :key="'control'+idx">
+            <div v-for="(group, idx) in Object.keys(control)" :key="'control'+idx + $editor.renderKey">
               <h4 class="text-lg bold py-1">{{ group }}</h4>
               <vu-button v-for="(css , x) in control[group]" :key="'btn'+x" :color="hasStyle(group, control[group][x])" @click="setStyle(group, control[group][x])">
                 {{ css }}
@@ -61,7 +60,7 @@
         </div>
       </div>
     </div>
-  </transition>
+
 </template>
 
 <script>
@@ -72,6 +71,7 @@ import VuButton from "@/components/VuButton";
 import createUid from "@/lib/createUniqueId.ts";
 import ContentTree from "@/components/ContentTree";
 import {cloneContent} from "@/lib/createUniqueId.ts";
+import cssToObject from 'css-to-object'
 
 export default {
   name: "Helper",
@@ -121,12 +121,11 @@ export default {
     }
   },
   watch: {
-    activeTab(val) {
-      this.$nextTick(() => {
+    getStyleObject:{
+      deep:true,
+      handler(){
         //
-        this.scrollMoveToSelectedContent();
-
-      })
+      }
     },
     contentFocused(element) {
       if (!this.isLayoutComponent) {
@@ -160,6 +159,9 @@ export default {
       return this.focusedContent.value.class || []
     },
     getStyleObject(){
+      if(!this.focusedContent){
+        return {};
+      }
       return this.focusedContent.contentStyleObject;
     },
     getTargetStyleText: {
@@ -167,7 +169,13 @@ export default {
         return this.focusedContent.value.cssText || ''
       },
       set(value) {
+        console.log(value, 'getTargetStyleText - set');
+        const object = cssToObject(value||'', {
+          camelCase: false,
+          numbers: false
+        });
         this.updateFocusedValue(value, 'cssText')
+        this.updateFocusedValue(object, 'cssObject')
       }
     },
     getContentModel() {
@@ -229,14 +237,15 @@ export default {
         return;
       }
 
-      const editorRect = this.$editor.getFrame.getBoundingClientRect();
-
+      const editorRect = this.$editor.$refs.frame.$el.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
+      const winY = window.scrollY;
+
       this.getStyle.display = 'absolute';
       this.getStyle.left = rect.x + editorRect.x + 'px';
       this.getStyle.right = 'auto';
 
-      this.getStyle.top = rect.y + editorRect.y + rect.height + 10 + 'px';
+      this.getStyle.top = rect.y + editorRect.y + rect.height + winY + 10 + 'px';
       this.getStyle.display = 'flex'
       this.getStyle.opacity = 1;
       await this.$nextTick(() => {
@@ -280,7 +289,7 @@ export default {
       }
     },
     hasStyle(key, value) {
-      const obj = this.focusedContent.getCssObjectByMedia
+      const obj = this.focusedContent.contentStyleObject
 
       if (!obj)
         return null;
@@ -295,9 +304,7 @@ export default {
       return null;
     },
     setStyle(key, value) {
-      const obj = {};
-      obj[key] = value;
-      this.focusedContent.setCssObject(obj);
+      this.focusedContent.setCssObject({ [key] : value });
     },
     toggleDisplay() {
       if (this.focusedContent.value.style && this.focusedContent.value.style.display === 'flex') {

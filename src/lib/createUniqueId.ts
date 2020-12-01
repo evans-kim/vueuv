@@ -10,9 +10,18 @@ export default function createUid() {
 export function idRecreate(content: ContentModel) {
 
     content.id = createUid();
+    if(!content.class){
+        Vue.set(content, 'class', []);
+    }
+    if(!content.cssObject){
+        Vue.set(content, 'cssObject', {});
+    }
     if( content.cssText ){
         content.cssText = content.cssText.replace(/#.*{?/ig, "#"+content.id+" {")
-        const value = cssToObject(content.cssText);
+        const value = cssToObject(content.cssText, {
+            camelCase: false,
+            numbers: false
+        });
 
         Vue.set(content, 'cssObject', value);
     }

@@ -1,52 +1,53 @@
 <template>
-  <iframe ref="frame" :width="frame.width" :height="frame.height" class="border shadow p-2 mx-auto" :style="getStyle"></iframe>
+  <iframe ref="frame" :width="frame.width" :height="frame.height" class="border shadow p-2 mx-auto relative"
+          :style="getStyle"></iframe>
 </template>
 
 <script>
 import Vue from "vue";
 
 export default {
-  inject:['$editor'],
+  inject: ['$editor'],
   name: "InnerFrame",
-  props:{
-    cleanStyle:{
+  props: {
+    cleanStyle: {
       type: Boolean
     }
   },
-  data(){
-    return{
-      renderComponent:null
+  data() {
+    return {
+      renderComponent: null
     }
   },
-  computed:{
-    getFrame(){
+  computed: {
+    getFrame() {
       return this.$refs.frame.contentWindow;
     },
-    frame(){
+    frame() {
       return this.$editor.frame
     },
     getStyle() {
-      return{
+      return {
         backgroundColor: (this.frame.backgroundColor || 'none'),
         transition: 'all ease-in-out 0.3s'
       }
     }
   },
-  methods:{
-    appendToBody(element){
+  methods: {
+    appendToBody(element) {
       return this.appendToFrame(element, 'body');
     },
-    appendToHead(element){
+    appendToHead(element) {
       return this.appendToFrame(element, 'head');
     },
-    appendToFrame(element, target='head'){
-      if(typeof element === 'string'){
+    appendToFrame(element, target = 'head') {
+      if (typeof element === 'string') {
         this.getFrame.document[target].appendChild(this.htmlToElement(element))
-        return ;
+        return;
       }
       this.getFrame.document[target].appendChild(element);
     },
-    scrapLinks(){
+    scrapLinks() {
       return [...document.head.getElementsByTagName('link'), ...document.body.getElementsByTagName('link')];
     },
     scrapStyles() {
@@ -62,9 +63,11 @@ export default {
       return str;
     },
     lunch() {
+      console.log('lunched!');
       //헤더
       this.appendToHead('<meta name="viewport" content="width=device-width,initial-scale=1.0">');
-      if(!this.cleanStyle){
+
+      if (!this.cleanStyle) {
         // 컴포넌트 CSS 적용
         const str = this.scrapStyles();
         const style = document.createElement('style');
@@ -72,10 +75,14 @@ export default {
         style.innerHTML = str;
         this.appendToHead(style);
 
-        // 기존의 CSS를 가져 옵니다.
+        // 도큐먼트의 css 를 스크랩
         const links = this.scrapLinks();
-        links.map(link=>{
-          this.appendToHead(link);
+        links.map(link => {
+          const newLink = document.createElement('link');
+          newLink.href = link.href || '';
+          newLink.rel = link.rel || '';
+          newLink.as = link.as || '';
+          this.appendToHead(newLink);
         })
       }
 
@@ -85,26 +92,26 @@ export default {
       const Editor = this.$editor;
 
       this.renderComponent = new Vue({
-        provide(){
-          return{
-            '$editor' : Editor
+        provide() {
+          return {
+            '$editor': Editor
           }
         },
-        render(h){
+        render(h) {
           const tagName = (Editor.config.editable) ? 'content-render' : 'content-exporter'
-          return h('div',{}, [
-            h('content-style', {props:{content: Editor.contentModel },key:Editor.renderKey + 'menu' }),
+          return h('div', {}, [
+            h('content-style', {props: {content: Editor.contentModel}}),
             h(tagName, {
-              props:{value: Editor.contentModel},
-              on:{
-                'update:content':Editor.handleRenderInput
-              },
-              key:Editor.renderKey}),
+              props: {value: Editor.contentModel},
+              on: {
+                'update:content': Editor.handleRenderInput
+              }
+            })
           ]);
         }
-      }).$mount();
+      }).$mount(this.$el.contentWindow.document.body);
 
-      this.appendToBody( this.renderComponent.$el )
+      //this.appendToBody()
     },
     htmlToElement(html) {
       const template = document.createElement('template');

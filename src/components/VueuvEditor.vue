@@ -26,7 +26,6 @@ import ContentRender from "@/components/ContentRender";
 import ContentExporter from "@/components/ContentExporter";
 import * as cloneDeep from "lodash/cloneDeep"
 import TemplateSaver from "@/components/TemplateSaver";
-import Vue from "vue";
 import InnerFrame from "@/components/InnerFrame";
 import Document from "@/components/Document";
 
@@ -102,7 +101,7 @@ export default {
       },
       renderKey: 'default',
       menubarKey: 'menubar',
-      showDocument: true
+      showDocument: false
     }
   },
   provide() {
@@ -147,7 +146,10 @@ export default {
       this.menubarKey = createUid();
     },
     refreshKey() {
-      this.renderKey = createUid();
+      console.log('refresh Key');
+      this.$nextTick(()=>{
+        //this.renderKey = createUid();
+      })
 
     },
     undo() {
@@ -288,9 +290,7 @@ export default {
       //this.contentModel.contents = content.contents;
     },
     handleRenderInput(val) {
-
       this.contentModel = val;
-      this.refreshKey()
     },
     setDefaultSelect() {
       this.states.selectedContent = null;

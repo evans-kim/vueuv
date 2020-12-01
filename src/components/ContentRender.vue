@@ -28,7 +28,7 @@ export default {
 
     const children = value.contents || [];
 
-    const childrenNode = children.map((child) => {
+    const childrenNode = children.forEach((child) => {
       if (typeof child === 'string') {
         return child;
       }
@@ -57,7 +57,7 @@ export default {
       props: props,
       on: listeners,
       ref: 'content',
-      key: value.id + 'render'
+      key: value.id
     };
 
     return h(tag, data, childrenNode)
@@ -143,11 +143,7 @@ export default {
     },
     contentStyleObject: {
       get: function () {
-        if (this.value.cssObject) {
-          return this.value.cssObject;
-        } else {
-          this.$set(this.value, 'cssObject', {});
-        }
+
         let media = "#" + this.value.id;
         if (this.$editor.media.mobile) {
           media = this.$editor.mediaQuery.mobile;
@@ -155,6 +151,10 @@ export default {
         if (this.$editor.media.tablet) {
           media = this.$editor.mediaQuery.tablet;
         }
+        if (this.value.cssObject) {
+          return this.value.cssObject[media];
+        }
+        this.$set(this.value, 'cssObject', {});
 
         const obj = this.getCssTextToObject;
 
@@ -277,7 +277,7 @@ export default {
         newStyle[id] = Object.assign(cloneAll(this.value.cssObject[id] || {}) , style);
       }
 
-      this.$set(this.value, 'cssObject' , Object.assign(this.value.cssObject, newStyle));
+      this.$set(this.value, 'cssObject' , Object.assign({}, this.value.cssObject, newStyle));
       this.$set(this.value, 'cssText', this.objectToCss());
       this.changingUpdate();
     },
@@ -303,22 +303,20 @@ export default {
       }));
     },
     changingUpdate() {
-
-      this.$emit('update:content', Object.assign({}, this.value));
-      if (!this.parent) {
-        return;
+      this.$emit('update:content', cloneAll(this.value));
+      if(this.parent){
+        this.parent.changingUpdate();
       }
-      //this.$set(this.parent.value.contents, this.getIndexFromParent, this.value);
-      this.parent.changingUpdate();
     },
     updateContentValue(value) {
-      if (!this.parent) {
-        this.$emit('update:content', this.value);
+      /*if (!this.parent) {
+        console.log( this.$editor.contentModel === this.value )
+        this.$emit('update:content', cloneAll(this.value));
         return;
       }
-      this.$set(this.parent.value.contents, this.getIndexFromParent, value);
-
-      this.changingUpdate();
+      this.$set(this.parent.value.contents, this.getIndexFromParent, value);*/
+      this.$emit('update:content', cloneAll(value));
+      //this.changingUpdate();
     },
     createChild(h, child) {
       return h('content-render', {props: {value: child, parent: this}, key: child.id});
@@ -338,9 +336,7 @@ export default {
       if (this.$editor.config.showGrid || this.$editor.states.isSorting) {
         classes.push('show-guide');
       }
-      if (this.isGuided) {
-        classes.push('hide-guide');
-      }
+
       return classes;
     },
     setUid() {
@@ -501,7 +497,7 @@ export default {
   }
 }
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .sortable-chosen {
   transition: all ease-in-out 0.3ms;
 }
@@ -539,10 +535,10 @@ export default {
 .show-guide {
   outline: 1px dashed #606060;
   padding: 1rem;
-  transition: all ease-in-out 300ms;
+  transition: width,height,padding,margin ease-in-out 300ms;
 }
 
 .hide-guide {
-  transition: all ease-in-out 300ms;
+  transition: width,height,padding,margin ease-in-out 300ms;
 }
 </style>

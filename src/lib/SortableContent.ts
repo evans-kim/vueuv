@@ -2,7 +2,7 @@ import Sortable, {MultiDrag, Swap, OnSpill, AutoScroll} from "sortablejs";
 import {Editor, ContentRender} from "@/types/VueuvTypes";
 import * as cloneDeep from "lodash/cloneDeep"
 import createUid from "@/lib/createUniqueId.ts"
-
+import Vue from "vue";
 
 export default class SortableContent {
     public vue: ContentRender;
@@ -61,6 +61,7 @@ export default class SortableContent {
     }
 
     parseEvent(evt: Sortable.SortableEvent, type) {
+        console.log(evt,type)
         return {
             type: type,
             item: evt.item.getAttribute('data-id'),
@@ -93,14 +94,15 @@ export default class SortableContent {
 
         if (this.editor.hasDragBlock()) {
             contentValue = cloneDeep(this.editor.states.dragBlock);
+            evt.item.remove();
         } else {
             contentValue = this.editor.getContentValueById(point.item);
         }
 
-        this.editor.setRollBackPoint()
+        this.editor.setRollBackPoint();
         this.vue.value.contents.splice(point.newIndex, 0, contentValue)
-
         this.vue.updateContents(this.vue.value)
+
     }
 
     onRemove(evt: Sortable.SortableEvent) {

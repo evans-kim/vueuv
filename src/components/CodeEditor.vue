@@ -13,7 +13,8 @@ export default {
   },
   methods: {
     handleInput(e){
-      const text =e.target.innerText
+      console.log('change CSS', e.target.value);
+      const text = e.target.value
 
       this.$emit('input', text)
     }

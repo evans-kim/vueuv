@@ -1,7 +1,18 @@
-import {CombinedVueInstance} from "vue/types/vue";
-import Vue from "vue/types/umd";
+import Vue, {CombinedVueInstance, ExtendedVue} from "vue/types/vue";
+import {ComponentOptions} from "vue";
+
+interface VueuvOption {
+    plugins: ComponentOptions<any>[];
+}
+
+interface ContentRenderMouseEvents {
+    click: Function;
+    dblclick: Function;
+    mouseover: Function;
+}
 
 export interface ContentModel {
+
     tag: string;
     id?: string;
     class?: string[];

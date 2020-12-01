@@ -78,9 +78,10 @@ export default {
       this.loadEditor();
     },
     disableEdit(){
-      if(this.editor)
+      if(this.editor){
         this.$emit('update:value', this.editor.getContent() );
-      this.editor.hide();
+        this.editor.hide();
+      }
     },
     async loadEditor(){
       if(this.editor){
