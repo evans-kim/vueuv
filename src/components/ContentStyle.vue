@@ -1,60 +1,74 @@
-<template>
-  <component :is="'style'" type="text/css">
-    {{ parseContentStyles }}
-    {{ responsibleStyles }}
-  </component>
-</template>
-
 <script>
 import * as flattenDeep from 'lodash/flattenDeep';
 
 export default {
   name: "ContentStyle",
   inject: ['$editor'],
+  render(h){
+    return h("style",{attrs:{type:'text/css'},domProps:{innerHTML:this.getCode}})
+  },
   computed: {
     responsibleStyles(){
       if(!this.$editor.config.editable){
         return '/** non-editable **/\n';
       }
-      const desktopCss = this.getCssByMedia(this.$editor.contentModel.contents, 'desktop');
+      const desktopCss = this.getCssByMedia(this.$editor.contentModel, 'desktop');
 
       if(this.$editor.getCurrentMedia === 'tablet'){
-        desktopCss.push( this.getCssByMedia(this.$editor.contentModel.contents, 'tablet') );
+        desktopCss.push( this.getCssByMedia(this.$editor.contentModel, 'tablet') );
       }
       if(this.$editor.getCurrentMedia === 'mobile'){
-        desktopCss.push( this.getCssByMedia(this.$editor.contentModel.contents, 'mobile') );
+        desktopCss.push( this.getCssByMedia(this.$editor.contentModel, 'mobile') );
       }
 
-      return [flattenDeep(desktopCss).filter(item => item)].join("\n").replace(",", '');
+      console.log(desktopCss);
+      const array = flattenDeep(desktopCss).filter(item => item);
+      return array.join(" \n ");
     },
     parseContentStyles() {
       if(this.$editor.config.editable){
         return '/** editable **/';
       }
-      const cssTexts = this.cssObjectToCssText(this.$editor.contentModel.contents);
+      const cssTexts = this.cssObjectToCssText(this.$editor.contentModel);
 
-      const deep = flattenDeep(cssTexts).filter(item => item);
+      const style = flattenDeep(cssTexts).filter(item => item);
 
-      return [this.$editor.contentModel.cssText || null, ...deep].join("\n");
+      return style.join(" \n ");
+    },
+    getCode() {
+      return this.responsibleStyles + this.parseContentStyles
     }
   },
   methods: {
 
     getCssText(contents) {
       return contents.map(content => {
+        if(typeof content === 'string'){
+          return null;
+        }
         if (content.contents && content.contents.length) {
           return [content.cssText, ...this.getCssText(content.contents)]
         }
         return content.cssText || null;
       })
     },
-    getCssByMedia(contents, media='desktop') {
-      return contents.map(content => {
-        if (content.contents && content.contents.length) {
-          return [( content.cssObject[media] ) ? this.attributeToCss( { ['#' + content.id]: content.cssObject[media] }) : null, ...this.getCssByMedia(content.contents, media)]
-        }
-        return ( content.cssObject[media] ) ? this.attributeToCss( { ['#' + content.id]: content.cssObject[media] }) : null;
-      })
+    getCssTextWithObject: function (content, media) {
+      if(!content.cssObject){
+        return null;
+      }
+      return (content.cssObject[media]) ? this.attributeToCss({['#' + content.id]: content.cssObject[media]}) : null;
+    },
+    getCssByMedia(content, media='desktop') {
+      if(typeof content === 'string'){
+        return [null];
+      }
+      if (content.contents && content.contents.length > 0) {
+        return [this.getCssTextWithObject(content, media), ...content.contents.map(child => {
+          return  this.getCssByMedia(child, media)
+        })]
+      }else{
+        return [this.getCssTextWithObject(content, media)]
+      }
     },
     attributeToCss(attribute, depth = 1) {
       const spaces = "  ".repeat(depth);
@@ -65,28 +79,39 @@ export default {
           return `${spaces}${k} {\n  ${toCss}\n  }\n`;
         }
         return `${spaces}${k}: ${v};\n`;
-      }).join("\n").replace(",", '')
+      }).join("")
     },
-    cssObjectToCssText(contents) {
-      return contents.map(content=>{
-        if (!content.cssObject) return null;
+    /**
+     *
+     * @param {ContentModel} content
+     * @return {*}
+     */
+    cssObjectToCssText(content) {
 
-        return Object.keys(content.cssObject).map(key => {
-          const value = content.cssObject[key];
-          if (!value) {
-            return null;
-          }
-          if(key === 'desktop'){
-            return this.attributeToCss({['#'+content.id]:value})
-          }
-          const media = this.$editor.mediaQuery[key]
-          return [media + "{\n", this.attributeToCss({['#'+content.id]:value}), "}\n"];
-        });
-      })
+      if(typeof content === 'string'){
+        return null;
+      }
+      const styles = Object.entries(content.cssObject).map( ([media, value]) => {
+
+        if (!value) {
+          return null;
+        }
+        if(media === 'desktop'){
+          return this.attributeToCss({['#'+content.id]:value})
+        }
+        const mediaQuery = this.$editor.mediaQuery[media]
+        return [mediaQuery + "{\n", this.attributeToCss({['#'+content.id]:value}), "}\n"].join("");
+      });
+      if( !content.contents || !content.contents.length){
+        return styles;
+      }
+
+      return [styles, ...content.contents.map(content=>{
+        return this.cssObjectToCssText(content);
+      }) ]
+
+
     },
   }
 }
 </script>
-<style>
-
-</style>

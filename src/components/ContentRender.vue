@@ -12,12 +12,17 @@ export default {
     if (!value) {
       return;
     }
+
     const SelectorEvents = {
       dblclick: this.activeContent,
       click: this.focusContent,
       mouseover: this.selectContent,
-      'update:content': this.changingUpdate
+      'update:content': this.updateContentValue
     };
+    if( typeof value === 'string'){
+      // 일반 텍스트는 랜더러에서 직접 수정할 수 있게 합니다.
+      return h('inner-text', {props:{value:value,contentRender:this}, on:SelectorEvents});
+    }
     const props = value.props || {};
     const keys = Object.keys(props);
     let propsEvents = {};
@@ -144,28 +149,19 @@ export default {
     contentStyleObject: {
       get: function () {
 
-        let media = "#" + this.value.id;
-        if (this.$editor.media.mobile) {
-          media = this.$editor.mediaQuery.mobile;
-        }
-        if (this.$editor.media.tablet) {
-          media = this.$editor.mediaQuery.tablet;
-        }
-        if (this.value.cssObject) {
+        if (this.value.cssObject && this.value.cssObject[this.$editor.getCurrentMedia]) {
           return this.value.cssObject[this.$editor.getCurrentMedia];
         }
 
-        this.$set(this.value, 'cssObject', {
-          desktop: {},
-          tablet : {},
-          mobile : {}
-        });
+        this.$set(this.value, 'cssObject', {});
+        this.$set(this.value.cssObject, 'desktop', {});
+        this.$set(this.value.cssObject, 'mobile', {});
+        this.$set(this.value.cssObject, 'tablet', {});
 
-        const obj = this.getCssTextToObject;
-
-        return obj[media] || {};
+        return this.value.cssObject;
       },
       set: function (value) {
+        this.$editor.setRollBackPoint();
         this.setCssObject(value);
         this.updateContentValue(this.value);
       }
@@ -257,14 +253,14 @@ export default {
      */
     setCssObject(style) {
 
-      const id = "#" + this.value.id;
       const media = this.$editor.getCurrentMedia;
-      const newStyle = {};
-      this.value.cssObject[media] = Object.assign({}, cloneAll(this.value.cssObject[media]), style);
+      if(!this.value.cssObject[media]){
+        this.$set(this.value.cssObject, media, style );
+      }else{
+        this.value.cssObject[media] = Object.assign({}, this.value.cssObject[media], style);
+      }
 
-      this.$set(this.value, 'cssObject' , Object.assign({}, this.value.cssObject, newStyle));
-
-      this.$emit('update:content', cloneAll(this.value));
+      this.changingUpdate()
     },
     objectToCss() {
       if (!this.value.cssObject) return '';
@@ -292,19 +288,9 @@ export default {
     },
     changingUpdate() {
       this.$emit('update:content', cloneAll(this.value));
-      if(this.parent){
-        this.parent.changingUpdate();
-      }
     },
     updateContentValue(value) {
-      /*if (!this.parent) {
-
-        this.$emit('update:content', cloneAll(this.value));
-        return;
-      }
-      this.$set(this.parent.value.contents, this.getIndexFromParent, value);*/
       this.$emit('update:content', cloneAll(value));
-      //this.changingUpdate();
     },
     createChild(h, child) {
       return h('content-render', {props: {value: child, parent: this}, key: child.id});
@@ -473,7 +459,8 @@ export default {
       this.isLabelBottom = rect.y < 20;
     },
     updateContents(val) {
-      this.updateContentValue(val);
+      this.$editor.setRollBackPoint();
+      this.$emit('update:content', cloneAll(val));
     },
     move(arr, fromIndex, toIndex) {
       const item = arr[fromIndex];
@@ -532,7 +519,7 @@ export default {
 }
 
 .show-guide {
-  outline: 1px dashed #606060;
+  border: 1px dashed #606060;
   padding: 1rem;
   transition: width,height,padding,margin ease-in-out 300ms;
 }

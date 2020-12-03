@@ -105,7 +105,6 @@ export default {
         setData(dataTransfer, draggedElement) {
           const index = draggedElement.getAttribute('data-block-index');
           const block = clone(sortable.vue.getBlocks[index].contentDefault);
-          block.id = createUid();
           block.tag = sortable.vue.camelToSnakeCase(sortable.vue.getBlocks[index].name).substring(1);
           sortable.editor.states.dragBlock = block;
         },
@@ -123,9 +122,8 @@ export default {
         group: {name: 'content-render', pull: 'clone', put: false},
         setData(dataTransfer, draggedElement) {
           const index = draggedElement.getAttribute('data-block-index');
-          const template = sortable.vue.getTemplates[index];
 
-          sortable.editor.states.dragBlock = cloneContent(template.value);
+          sortable.editor.states.dragBlock = sortable.vue.getTemplates[index].value;
         },
         onEnd() {
           sortable.editor.states.dragBlock = null;

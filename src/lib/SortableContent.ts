@@ -49,7 +49,6 @@ export default class SortableContent {
     }
 
 
-
     setEvent(name, func) {
         this.options[name] = event => {
             func(event)
@@ -101,7 +100,6 @@ export default class SortableContent {
             evt.item.remove();
         }
 
-        this.editor.setRollBackPoint();
         this.vue.value.contents.splice(point.newIndex, 0, contentValue)
         this.vue.updateContents(this.vue.value)
 
@@ -109,7 +107,7 @@ export default class SortableContent {
 
     onRemove(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'remove');
-        this.editor.setRollBackPoint()
+
         this.vue.value.contents.splice(point.oldIndex, 1)
 
         this.vue.updateContents(this.vue.value)
@@ -118,7 +116,7 @@ export default class SortableContent {
 
     onUpdate(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'update');
-        this.editor.setRollBackPoint()
+
         this.vue.move(this.vue.value.contents, point.oldIndex, point.newIndex)
 
         this.vue.updateContents(this.vue.value)

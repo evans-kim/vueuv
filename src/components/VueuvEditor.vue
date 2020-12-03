@@ -91,6 +91,7 @@ export default {
       contentModel: {
         id:'vueuv-content-root',
         isRootContent: true,
+        cssObject:{},
         contents: []
       },
       logs: [],
@@ -208,11 +209,28 @@ export default {
       const contentRenderById = this.getContentRenderById(id, this.getRootRender);
       return contentRenderById.value || {};
     },
+    getContentRenderHas(value, parent=null){
+      if(!parent){
+        parent = this.contentModel;
+      }
+      if(!parent || !parent.contents){
+        return null;
+      }
+      for (let i = 0; i < parent.contents.length; i++) {
+        console.log(parent.contents[i]);
+        const content = parent.contents[i];
+        if(value === content){
+          return parent;
+        }
+        return this.getContentRenderHas(value, content)
+      }
+    },
     /**
      * @param {string} id
      * @param {ContentRender} vue
      */
     getContentRenderById(id, vue) {
+
       if (!vue || typeof vue !== 'object') {
         console.warn('this is not vue component');
         return;
@@ -356,5 +374,4 @@ export default {
   opacity: 0;
   transform: translateY(-10px);
 }
-
 </style>

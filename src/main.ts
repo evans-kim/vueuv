@@ -6,7 +6,7 @@ Vue.use(VueCompositionAPI)
 import Vueuv from "@/plugin";
 import TextContent from "@/Contents/TextContent.vue"
 import BasicImage from '@/Contents/BasicImage.vue'
-
+import Anchor from "@/Contents/Anchor.vue";
 /**
  * Set your plugins like below
  */
@@ -14,6 +14,7 @@ Vue.use(Vueuv, {
     plugins:  [
         TextContent,
         BasicImage,
+        Anchor
     ]
 });
 

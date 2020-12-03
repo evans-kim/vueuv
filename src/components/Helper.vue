@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isLayoutComponent" :style="getStyle">
+    <div v-if="isLayoutComponent" v-show="!isEditing" :style="getStyle">
       <div class="m-2">
         <div class="flex">
           <label>
@@ -51,6 +51,7 @@
             <code-editor v-model="getTargetStyleText"></code-editor>
           </div>
           <div v-if="activeTab === 'controller'">
+            <style-controller :value="focusedContent.cssObject" @input="(style)=>{updateFocusedValue(style, 'cssObject')}"></style-controller>
             <div v-for="(group, idx) in Object.keys(control)" :key="'control'+idx + $editor.renderKey">
               <h4 class="text-lg bold py-1">{{ group }}</h4>
               <vu-button v-for="(css , x) in control[group]" :key="'btn'+x" :color="hasStyle(group, control[group][x])" @click="setStyle(group, control[group][x])">
@@ -76,11 +77,12 @@ import createUid from "@/lib/createUniqueId.ts";
 import ContentTree from "@/components/ContentTree";
 import {cloneContent} from "@/lib/createUniqueId.ts";
 import cssToObject from 'css-to-object'
+import StyleController from "@/components/StyleController";
 
 export default {
   name: "Helper",
   inject: ['$editor'],
-  components: {ContentTree, CodeEditor, ClassTagInput, VuButton},
+  components: {StyleController, ContentTree, CodeEditor, ClassTagInput, VuButton},
   data() {
     return {
       activeTab: 'class',
@@ -92,8 +94,7 @@ export default {
         right: 'auto',
         top: 0,
         zIndex: 10,
-        opacity: 1,
-        transition: 'all ease-in-out 0.2s'
+        opacity: 1
       },
       pointer: {
         x: 0,
@@ -190,12 +191,12 @@ export default {
     contentFocused() {
       return this.$editor.states.focusedContent;
     },
-    isSorting() {
-      return this.$editor.states.isSorting || this.$editor.states.editingContent;
+    isEditing() {
+      return this.$editor.states.editingContent;
     },
     isLayoutComponent() {
 
-      return this.contentFocused && this.focusedContent;
+      return this.contentFocused && !this.isEditing;
     },
     getIndexFromParent() {
       if (!this.focusedContent.parent) {
@@ -207,7 +208,7 @@ export default {
   methods: {
     resetPosition(){
 
-      if (this.contentFocused) {
+      if (this.isLayoutComponent) {
         this.$nextTick(() => {
           this.setPosition(this.contentFocused.component.$el)
           this.scrollMoveToSelectedContent();
@@ -226,8 +227,11 @@ export default {
         this.updateValue(value)
         return;
       }
-
-      this.$set(oldValue, key, value);
+      if(!oldValue[key]){
+        this.$set(oldValue, key, value);
+      }else{
+        oldValue[key] = value;
+      }
       this.updateValue(oldValue)
 
     },
@@ -239,23 +243,24 @@ export default {
      * @param {HTMLElement} element
      */
     async setPosition(element) {
-      if(!element){
+      if(!element || !this.$el){
         return;
       }
       await this.$nextTick();
-
 
       const editorRect = this.$editor.$el.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
 
       this.getStyle.display = 'absolute';
-      this.getStyle.left = rect.x + editorRect.x + 'px';
+      const scrollX = window.scrollX;
+      this.getStyle.left = rect.x + editorRect.x + scrollX + 'px';
       this.getStyle.right = 'auto';
 
-      this.getStyle.top = rect.y + editorRect.y + rect.height + 20 + 'px';
-      this.getStyle.display = 'flex'
+      this.getStyle.top = rect.y + editorRect.y + rect.height + window.scrollY + 20 + 'px';
+      //this.getStyle.display = 'flex'
       this.getStyle.opacity = 1;
       await this.$nextTick(() => {
+
         const me = this.$el.getBoundingClientRect();
         // 화면을 왼쪽으로 넘어 간다면?
         const number = window.innerWidth - (me.x + me.width) - 100;
@@ -270,6 +275,9 @@ export default {
     scrollMoveToSelectedContent() {
 
       const div = this.$refs['structure'];
+      if(!div){
+        return ;
+      }
       const selectedTags = div.getElementsByClassName('selected-tag');
       if (!selectedTags.length) {
         return;
@@ -332,10 +340,10 @@ export default {
               class: ['p-2'],
               contents: []
             }))
+            this.focusedContent.parent.refreshValue()
           }
         })
         this.$editor.config.showGrid = true;
-        this.$editor.refreshKey();
         return;
       }
       this.$set(this.focusedContent.value.contents, this.focusedContent.value.contents.length, cloneContent({
@@ -346,9 +354,9 @@ export default {
       }));
       this.$editor.config.showGrid = true;
       if(this.focusedContent.parent)
-        this.focusedContent.parent.changingUpdate();
+        this.focusedContent.parent.refreshValue();
       else
-        this.focusedContent.changingUpdate();
+        this.focusedContent.refreshValue();
     },
     deleteContents() {
       this.$editor.setRollBackPoint();

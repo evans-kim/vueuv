@@ -7,9 +7,12 @@ import Helper from "@/components/Helper.vue";
 import ModalPlugin from "@/lib/ModalPlugin";
 
 export {VueuvEditor};
+import VTooltip from 'v-tooltip'
 
 export default {
     install(Vue, options) {
+        // 툴팁 플러그인 설치
+        Vue.use(VTooltip)
         // 데이터를 위한 플러그인이 있다면 컴포넌트로 등록합니다.
         if (options.plugins.length > 0) {
 

@@ -57,7 +57,7 @@ export default {
   name: "TextContent",
   label:'문단',
   contentDefault:{
-    style:{padding:'1rem'},
+    class:['p-2'],
     props:{
       value:'New paragraph'
     }

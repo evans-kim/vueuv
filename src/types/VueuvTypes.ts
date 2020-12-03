@@ -90,6 +90,7 @@ export interface ContentRender extends Vue {
 }
 
 export interface ModalProp {
+    color?: string;
     title?: string;
     body?: string;
     yesButton?: string;

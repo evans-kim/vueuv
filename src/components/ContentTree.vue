@@ -2,20 +2,25 @@
   <draggable tag="ul" v-if="hasContents(value)"
              group="content-tree"
              ghost-class="ghost"
-             handle=".node-handler"
+
              animation="300"
              :value="value"
              @input="handleValue">
     <li class="pl-3" v-for="(com, idx) in value" :key="idx">
+      <div v-if="com && typeof com === 'string'" :class="{'selected-tag':isFocused(com)}" class="node">
+        <span class="node-handler p-2" @click.stop="setSelectedContentById(com)"
+              @dblclick.stop="setEditingContentById(com)"> :: </span>
+        {{ com }}
+      </div>
       <div v-if="com && com.id" :class="{'selected-tag':isFocused(com.id)}" class="node" :style="getStyle(com)">
-        <span class="node-handler p-2" @click.stop="setSelectedContentById(com.id)"
+        <span class="node-handler p-2" @click.stop="setSelectedContentById(com)"
               @dblclick.stop="setEditingContentById(com.id)"> :: </span>
         {{ com.tag }}#{{ com.id }}
         <span v-if="hasChildren(com)" class="toggle" @click="()=>{ isOpen = !isOpen }"> {{ isOpen ? '-' : '+' }} </span>
       </div>
-      <template v-if="hasChildren(com)">
-        <content-tree v-model="com.contents" v-show="isOpen"></content-tree>
-      </template>
+
+      <content-tree v-model="com.contents" v-show="isOpen"></content-tree>
+
     </li>
   </draggable>
 </template>
@@ -55,7 +60,7 @@ export default {
       return this.getStates.selectedContent && this.getStates.selectedContent === id;
     },
     hasContents(com) {
-      return com && com.length > 0;
+      return com && Array.isArray(com);
     },
     getStyle(com) {
       const styles = {};
@@ -69,12 +74,27 @@ export default {
       }
       return styles;
     },
-    setSelectedContentById(id) {
-      if (!id) {
+    /**
+     *
+     * @param {string|object} content
+     */
+    setSelectedContentById(content) {
+      if (!content) {
         return;
       }
-
-      const contentRender = this.$editor.getContentRenderById(id, this.$editor.$refs.render);
+      if(typeof content === 'string'){
+        const parent = this.$editor.getContentRenderHas(content);
+        if(!parent){
+          console.warn('Not found Content render : ' + content);
+          return;
+        }
+        content = parent.id;
+      }
+      let contentId = content;
+      if(typeof content === 'object'){
+        contentId = content.id;
+      }
+      const contentRender = this.$editor.getContentRenderById(contentId, this.$editor.$refs.render);
 
       contentRender.setFocusedContent();
     },
