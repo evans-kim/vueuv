@@ -8,7 +8,7 @@ module.exports = {
         extend: {},
     },
     variants: {
-      border:['last']
+      borderWidth:['last']
     },
     plugins: [],
 }

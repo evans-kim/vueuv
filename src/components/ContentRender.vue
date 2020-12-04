@@ -3,7 +3,7 @@
 import createUniqueId from "@/lib/createUniqueId.ts";
 import SortableContent from "@/lib/SortableContent";
 import cssToObject from 'css-to-object';
-import {cloneAll} from "@/lib/createUniqueId";
+import {cloneAll, contentModelFactory} from "@/lib/createUniqueId";
 
 export default {
   name: 'ContentRender',
@@ -57,7 +57,7 @@ export default {
 
     const data = {
       class: [...value.class || [], ...this.selectorClass()],
-      //style: (value.cssObject) ? value.cssObject.desktop||{} : {},
+      //style: this.getCssObjectByMedia,
       attrs: attrs,
       props: props,
       on: listeners,
@@ -148,17 +148,7 @@ export default {
     },
     contentStyleObject: {
       get: function () {
-
-        if (this.value.cssObject && this.value.cssObject[this.$editor.getCurrentMedia]) {
-          return this.value.cssObject[this.$editor.getCurrentMedia];
-        }
-
-        this.$set(this.value, 'cssObject', {});
-        this.$set(this.value.cssObject, 'desktop', {});
-        this.$set(this.value.cssObject, 'mobile', {});
-        this.$set(this.value.cssObject, 'tablet', {});
-
-        return this.value.cssObject;
+        return this.value.cssObject[this.$editor.getCurrentMedia] || {};
       },
       set: function (value) {
         this.$editor.setRollBackPoint();
@@ -211,29 +201,6 @@ export default {
         return null;
       }
       return this.parent.value.contents.map(content => content.id).indexOf(this.value.id)
-    },
-    getCssObjectByMedia() {
-      if (!this.value) {
-
-        return {}
-      }
-      if (!this.value.cssObject) {
-        this.$set(this.value, 'cssObject', {});
-        return this.value.cssObject;
-      }
-      if (this.$editor.media.desktop) {
-        return this.value.cssObject['#' + this.value.id] || {};
-      }
-      let media = '';
-      if (this.$editor.media.mobile) {
-        media = this.$editor.mediaQuery.mobile;
-        return (this.value.cssObject[media]) ? this.value.cssObject[media]['#' + this.value.id] : {};
-      }
-      if (this.$editor.media.tablet) {
-        media = this.$editor.mediaQuery.tablet;
-        return (this.value.cssObject[media]) ? this.value.cssObject[media]['#' + this.value.id] : {};
-      }
-      return {};
     }
   },
   methods: {
@@ -254,10 +221,16 @@ export default {
     setCssObject(style) {
 
       const media = this.$editor.getCurrentMedia;
-      if(!this.value.cssObject[media]){
-        this.$set(this.value.cssObject, media, style );
-      }else{
-        this.value.cssObject[media] = Object.assign({}, this.value.cssObject[media], style);
+      const cssObjectElement = this.value.cssObject[media];
+      for (const [key, value] of Object.entries(style)) {
+        if(value){
+          this.$set( cssObjectElement, key, value);
+          continue;
+        }
+        if( !value && cssObjectElement[key] ){
+          this.$delete(cssObjectElement, key);
+        }
+
       }
 
       this.changingUpdate()
@@ -269,9 +242,9 @@ export default {
         if (!value) {
           return '';
         }
-        return [key + "{\n", this.attributeToCss(value), "}\n"];
+        return [key + "{\n", this.attributeToCss(value), "}\n"].join();
       });
-      return map.join("").replace(/,/ig, '');
+      return map.join("");
     },
     getPropsEvents(keys) {
 
@@ -279,17 +252,25 @@ export default {
         return ["update:" + key, (val) => {
 
           this.$editor.setRollBackPoint();
-          this.$set(this.value.props, key, val);
+          if(this.value.props[key]){
+            this.value.props[key] = val
+          }else{
+            this.$set(this.value.props, key, val);
+          }
+          this.refreshValue()
         }];
       }));
     },
     refreshValue(){
+      console.log(3)
       this.$emit('update:content', cloneAll(this.value));
     },
     changingUpdate() {
+      console.log(2)
       this.$emit('update:content', cloneAll(this.value));
     },
     updateContentValue(value) {
+      console.log(1)
       this.$emit('update:content', cloneAll(value));
     },
     createChild(h, child) {
@@ -317,9 +298,8 @@ export default {
       if (this.isStringType) {
         return;
       }
-      if (!this.value.id) {
-        this.$set(this.value, 'id', this.createUid())
-      }
+
+      this.$emit('update:content', contentModelFactory(cloneAll(this.value)))
     },
     deleteContent() {
 
@@ -357,8 +337,7 @@ export default {
       }
     },
     selectContent(event) {
-
-      if (this.focusedContent) {
+      if (this.focusedContent || this.editingContent) {
         return;
       }
       if (!event.target !== this.$el) {
@@ -479,7 +458,6 @@ export default {
   },
   mounted() {
     this.initSorting();
-
   }
 }
 </script>

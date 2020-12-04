@@ -87,6 +87,7 @@ export default {
         case 'default':
           typeClasses = [
             "text-main-300",
+              "bg-gray-100",
             "focus:border-gray-300",
           ];
           break;

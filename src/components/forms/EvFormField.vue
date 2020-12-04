@@ -5,7 +5,7 @@
     </div>
     <div :class="getFieldWrapClass" class="relative flex flex-col h-full">
       <slot :handler="handleInput" :value="getParentValue">
-        <div class="items-center" style="min-height: 40px;">
+        <div class="items-center">
           <div v-if="isValue" class="py-1 px-2 text-right h-full">{{ getParentValue }}</div>
           <component :is="getInputComponent" v-else
                      :auto-max="autoMax"

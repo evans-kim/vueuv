@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center flex-no-wrap overflow-scroll">
     <label v-for="(option,idx) in options" :key="idx" :class="getActiveClass(option)"
-           class="py-1 px-2 last:border-r border-r-0 text-xs cursor-pointer whitespace-nowrap">
+           class="py-1 px-2 border-r-0 last:border-r text-xs cursor-pointer whitespace-nowrap">
       <input :value="getValue(option)" class="hidden" name="payment_type" type="radio" @input="inputHandler">
       {{ getLabel(option) }}
     </label>

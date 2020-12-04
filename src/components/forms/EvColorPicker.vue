@@ -4,7 +4,7 @@
       <div class="shadow border rounded cursor-pointer inline-block" :style="getStyle" @click="()=>{ showPanel = !showPanel }"></div>
       <div class="text-sm">{{value}}</div>
     </div>
-    <div v-show="showPanel" class="absolute" style="padding: 10px" @mouseleave="()=>{ showPanel = false; }">
+    <div v-show="showPanel" class="absolute z-20" style="padding: 20px" @mouseleave="()=>{ showPanel = false; }">
       <chrome :value="value" @input="(val)=>{handleColor(val)}"></chrome>
     </div>
   </div>

@@ -51,13 +51,7 @@
             <code-editor v-model="getTargetStyleText"></code-editor>
           </div>
           <div v-if="activeTab === 'controller'">
-            <style-controller :value="focusedContent.cssObject" @input="(style)=>{updateFocusedValue(style, 'cssObject')}"></style-controller>
-            <div v-for="(group, idx) in Object.keys(control)" :key="'control'+idx + $editor.renderKey">
-              <h4 class="text-lg bold py-1">{{ group }}</h4>
-              <vu-button v-for="(css , x) in control[group]" :key="'btn'+x" :color="hasStyle(group, control[group][x])" @click="setStyle(group, control[group][x])">
-                {{ css }}
-              </vu-button>
-            </div>
+            <style-controller :value="focusedContent.cssObject"></style-controller>
           </div>
         </div>
         <div ref="structure" class="p-1 border shadow mt-2 bg-white" style="max-height: 300px; overflow-y: auto;">
@@ -252,8 +246,8 @@ export default {
       const rect = element.getBoundingClientRect();
 
       this.getStyle.display = 'absolute';
-      const scrollX = window.scrollX;
-      this.getStyle.left = rect.x + editorRect.x + scrollX + 'px';
+      const pointX = rect.x + (rect.width/2) + editorRect.x + window.scrollX;
+      this.getStyle.left = pointX + 'px';
       this.getStyle.right = 'auto';
 
       this.getStyle.top = rect.y + editorRect.y + rect.height + window.scrollY + 20 + 'px';
@@ -263,7 +257,7 @@ export default {
 
         const me = this.$el.getBoundingClientRect();
         // 화면을 왼쪽으로 넘어 간다면?
-        const number = window.innerWidth - (me.x + me.width) - 100;
+        const number = window.innerWidth - pointX;
         if (number < 0 ) {
           this.getStyle.left = "auto";
           this.getStyle.right = '20px';
@@ -303,31 +297,6 @@ export default {
         return [];
       }
     },
-    hasStyle(key, value) {
-      const obj = this.focusedContent.contentStyleObject
-
-      if (!obj)
-        return null;
-
-      if (!obj[key])
-        return null;
-
-      if (obj[key] === value){
-        return 'green';
-      }
-
-      return null;
-    },
-    setStyle(key, value) {
-      this.focusedContent.setCssObject({ [key] : value });
-    },
-    toggleDisplay() {
-      if (this.focusedContent.value.style && this.focusedContent.value.style.display === 'flex') {
-        this.setStyle('display', 'flow-root')
-      } else {
-        this.setStyle('display', 'flex')
-      }
-    },
     addContents() {
       // 하위 컨덴츠가 없다면
       this.$editor.setRollBackPoint();
@@ -340,7 +309,6 @@ export default {
               class: ['p-2'],
               contents: []
             }))
-            this.focusedContent.parent.refreshValue()
           }
         })
         this.$editor.config.showGrid = true;
@@ -353,10 +321,8 @@ export default {
         contents: []
       }));
       this.$editor.config.showGrid = true;
-      if(this.focusedContent.parent)
-        this.focusedContent.parent.refreshValue();
-      else
-        this.focusedContent.refreshValue();
+
+
     },
     deleteContents() {
       this.$editor.setRollBackPoint();

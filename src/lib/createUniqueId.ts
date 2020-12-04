@@ -3,7 +3,7 @@ import {ContentModel} from "@/types/VueuvTypes";
 import Vue from "vue";
 
 export default function createUid(): string {
-    return Math.random().toString(36).substr(2, 6);
+    return "vv" + Math.random().toString(36).substr(2, 6);
 }
 
 export function reactive(data: object) {
@@ -19,7 +19,7 @@ export function reactive(data: object) {
     })
 }
 
-export function idRecreate(content: ContentModel | string) {
+export function contentModelFactory(content: ContentModel | string) {
     if (typeof content === 'string') {
         return;
     }
@@ -38,7 +38,9 @@ export function idRecreate(content: ContentModel | string) {
             'mobile': {}
         };
     }
-
+    if(!content.tag){
+        content.tag = 'div';
+    }
     if (content.cssText && oldId) {
 
         const idregexp = new RegExp(oldId, 'ig');
@@ -49,10 +51,10 @@ export function idRecreate(content: ContentModel | string) {
     reactive(content);
     if (content.contents && content.contents.length) {
         content.contents.map(con => {
-            idRecreate(con);
+            contentModelFactory(con);
         });
     }
-
+    return content;
 }
 
 export function createDefaultContentModel() {
@@ -67,7 +69,7 @@ export function cloneAll(content) {
 export function cloneContent(content) {
 
     const duplicate = cloneDeep(content);
-    idRecreate(duplicate);
+    contentModelFactory(duplicate);
     return duplicate;
 }
 

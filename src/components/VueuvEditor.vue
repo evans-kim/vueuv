@@ -91,7 +91,11 @@ export default {
       contentModel: {
         id:'vueuv-content-root',
         isRootContent: true,
-        cssObject:{},
+        cssObject:{
+          desktop: {},
+          tablet: {},
+          mobile: {}
+        },
         contents: []
       },
       logs: [],

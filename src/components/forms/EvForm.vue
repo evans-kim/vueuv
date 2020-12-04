@@ -46,12 +46,13 @@ export default {
         console.log('undefined model');
         return null;
       }
-      const source = {};
-      source[field] = value;
-      if (this.value[field] === 'undefined') {
+      const source = {[field]:value};
+
+      if (this.value[field] === 'undefined' && value) {
         this.$set(this.value, field, value);
       }
-      this.$emit('input', Object.assign({}, this.value, source));
+      const args = Object.assign({}, this.value, source);
+      this.$emit('input', args);
       this.clearError(field);
       if (this.hook) {
         this.hook(field, value, this.value);
@@ -63,7 +64,7 @@ export default {
       }
 
       if (typeof this.value[field] === "undefined") {
-        this.$set(this.value, field, '');
+        //this.$set(this.value, field, '');
       }
       return this.value[field];
     },

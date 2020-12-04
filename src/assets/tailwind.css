@@ -2,4 +2,14 @@
 
 @tailwind components;
 
+.btn-blue {
+    @apply px-4 py-2 bg-blue-600 text-white rounded;
+}
+.field-group{
+    @apply border p-2 mb-1 shadow rounded w-full flex flex-wrap items-center;
+}
+
+.sub-title{
+    @apply text-lg font-extralight;
+}
 @tailwind utilities;

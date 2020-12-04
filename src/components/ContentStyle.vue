@@ -5,7 +5,7 @@ export default {
   name: "ContentStyle",
   inject: ['$editor'],
   render(h){
-    return h("style",{attrs:{type:'text/css'},domProps:{innerHTML:this.getCode}})
+    return h("style",{attrs:{type:'text/css', id:'content-styler'},domProps:{innerHTML:this.getCode}})
   },
   computed: {
     responsibleStyles(){
@@ -21,7 +21,6 @@ export default {
         desktopCss.push( this.getCssByMedia(this.$editor.contentModel, 'mobile') );
       }
 
-      console.log(desktopCss);
       const array = flattenDeep(desktopCss).filter(item => item);
       return array.join(" \n ");
     },

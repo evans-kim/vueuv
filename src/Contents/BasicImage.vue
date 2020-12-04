@@ -1,10 +1,10 @@
 <template>
-  <div v-if="isEdited" class="relative" v-vueuv-content.stop="{dblclick:(e)=>{ e.stopPropagation(); }}">
+  <div v-if="isEdited" class="relative" v-vueuv-content>
     <img :alt="alt" :src="src"/>
 
     <div class="absolute" :style="getEditorStyle" style=" height:80px; z-index: 100; background: rgba(0,0,0, .5)">
       <div class="flex justify-center items-center h-full p-2">
-        <input id="src" class="w-full" :value="src" @change="(e)=>{ $emit('update:src', e.target.value) }"/>
+        <input id="src" class="w-full" :value="src" @change="updateSrc"/>
         <vu-button @click.stop="disableEdit"> Save</vu-button>
       </div>
     </div>
@@ -43,6 +43,9 @@ export default {
     disableEdit() {
       this.isEdited = false;
     },
+    updateSrc(e) {
+      this.$emit('update:src', e.target.value)
+    }
   },
   computed: {
     getEditorStyle() {
