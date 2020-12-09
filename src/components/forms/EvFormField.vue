@@ -36,10 +36,11 @@ import Vue from 'vue';
 import EvInput from "./EvInput";
 import EvCheckBox from "./EvCheckBox";
 import EvRadioGroup from "@/components/forms/EvRadioGroup";
+import EvHintInput from "@/components/forms/EvHintInput";
 
 export default {
   name: 'EvFormField',
-  components: {EvRadioGroup, EvCheckBox, EvInput},
+  components: {EvHintInput, EvRadioGroup, EvCheckBox, EvInput},
   props: {
     value: null,
     label: null,
@@ -212,7 +213,7 @@ export default {
         return this.type;
       }
       // 지역 컴포넌트인가?
-      comps = this.searchComponent(this.$parent, snakeToCamel);
+      comps = this.searchComponent(this, snakeToCamel);
 
       if (comps) {
         return this.type;

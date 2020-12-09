@@ -4,11 +4,13 @@ module.exports = {
         './src/**/*.js',
         './src/**/*.ts',
     ],
+    darkMode: false,
     theme: {
         extend: {},
     },
     variants: {
-      borderWidth:['last']
+        margin: ['first'],
+        borderWidth: ['last']
     },
     plugins: [],
 }

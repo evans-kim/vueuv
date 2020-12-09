@@ -24,7 +24,7 @@ export default {
     },
     type:{
       type:String,
-      default:'hex'
+      default:'rgba'
     }
   },
   data(){

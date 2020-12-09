@@ -16,7 +16,7 @@ export default {
     }
   },
   render(h) {
-    if (!this.$editor.config.editable) {
+    if (!this.$editor.options.editable) {
       return this._v(this.value)
     }
     if (!this.isEdited) {

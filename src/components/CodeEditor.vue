@@ -1,43 +1,24 @@
 <template>
-  <textarea :value="value" @change="handleInput" class="my-editor w-full" rows="10"></textarea>
+  <textarea :value="value" @change="handleInput" class="code-viewer w-full" rows="10"></textarea>
 </template>
 
-<script>
+<script lang="ts">
 
-export default {
-  name: "CodeEditor",
-  props:{
-    value:{
-      type: String
-    }
-  },
-  methods: {
-    handleInput(e){
+import Component from "vue-class-component";
+import Vue from "vue";
 
-      const text = e.target.value
+const Props = Vue.extend({
+  props: {
+    value: String
+  }
+})
 
-      this.$emit('input', text)
-    }
+@Component
+export default class CodeEditor extends Props{
+
+  handleInput(e){
+    const text = e.target.value
+    this.$emit('input', text)
   }
 }
 </script>
-
-<style>
-/* required class */
-.my-editor {
-  /* we dont use `language-` classes anymore so thats why we need to add background and text color manually */
-  background: #303030;
-  color: #eeeeee;
-  margin-top: 1rem;
-  min-width: 20rem;
-  max-width: 40rem;
-
-
-  /* you must provide font-family font-size line-height. Example: */
-  font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  padding: 5px;
-}
-
-</style>

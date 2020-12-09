@@ -15,7 +15,7 @@
     </template>
   </v-popover>
   <!-- To prevent anchor click event execution, the href attribute has been removed.  -->
-  <a v-else-if="$editor.config.editable" v-vueuv-content v-tooltip="{content: 'Address:' + href}">
+  <a v-else-if="$editor.options.editable" v-vueuv-content v-tooltip="{content: 'Address:' + href}">
     <slot>{{text}}</slot>
   </a>
   <!-- This will be shown on export mode -->

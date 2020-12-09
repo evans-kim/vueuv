@@ -2,8 +2,11 @@
 
 @tailwind components;
 
-.btn-blue {
-    @apply px-4 py-2 bg-blue-600 text-white rounded;
+.btn {
+    @apply px-2 py-1 text-white rounded cursor-pointer ml-1 first:ml-0 ;
+}
+.btn-green{
+    @apply bg-green-600 hover:bg-green-500;
 }
 .field-group{
     @apply border p-2 mb-1 shadow rounded w-full flex flex-wrap items-center;
@@ -11,5 +14,9 @@
 
 .sub-title{
     @apply text-lg font-extralight;
+}
+
+.code-viewer{
+    @apply whitespace-pre bg-black rounded p-2 text-white;
 }
 @tailwind utilities;

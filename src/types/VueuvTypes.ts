@@ -1,5 +1,7 @@
-import Vue, {CombinedVueInstance, ExtendedVue} from "vue/types/vue";
+import {CombinedVueInstance} from "vue/types/vue";
 import {ComponentOptions} from "vue";
+import TemplateSaver from "@/components/TemplateSaver.vue";
+import {Vue} from 'vue-property-decorator';
 
 interface VueuvOption {
     plugins: ComponentOptions<any>[];
@@ -30,36 +32,42 @@ export interface ContentModel {
 
 interface StatedContentRender {
     id: string;
-    component: CombinedVueInstance<any, any, any, any, any>;
+    component: ContentRender;
 }
 
 export interface EditorStates {
-    dragBlock: object;
-    selectedContent: object | null;
-    focusedContent: StatedContentRender | null;
-    editingContent: StatedContentRender | null;
-    isSorting: boolean;
-
-    refreshMenu(): void;
+    dragBlock?: object;
+    selectedContent?: object | null;
+    focusedContent?: StatedContentRender;
+    editingContent?: StatedContentRender | null;
+    isSorting?: boolean;
 }
 
-export interface Editor {
+interface EditorRefs {
+    [key: string]: Vue | Element | Vue[] | Element[];
+    'template-saver': TemplateSaver;
+}
+
+export interface Editor extends Vue {
+    $refs: EditorRefs;
     getCurrentMedia: 'desktop' | 'mobile' | 'tablet';
     keys: { ctrl: boolean; alt: boolean };
     frame: {
+        backgroundColor: string;
         width: string;
         height: string;
-    }
+        
+    };
     mediaQuery: {
-        mobile: string;
-        tablet: string;
         desktop: string;
-    }
+        tablet: string;
+        mobile: string;
+    };
     media: {
         mobile: boolean;
         tablet: boolean;
         desktop: boolean;
-    }
+    };
     config: {
         editable: boolean;
         showGrid: boolean;
@@ -80,13 +88,18 @@ export interface Editor {
 export interface ContentRender extends Vue {
     blocks: any;
     $editor: Editor;
-    value: any;
+    value: ContentModel;
     isContentRender?: boolean;
     getValue: ContentModel;
+    parent: ContentRender;
 
     move(contents: any, oldIndex: number, newIndex: number): void;
 
     updateContents(value: any): void;
+
+    setCssObject(value: unknown, desktop: string): void;
+
+    updateContentValue(value): void;
 }
 
 export interface ModalProp {

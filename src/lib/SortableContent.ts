@@ -1,19 +1,26 @@
 import Sortable, {MultiDrag, Swap, OnSpill, AutoScroll} from "sortablejs";
-import {Editor, ContentRender} from "@/types/VueuvTypes";
+import {Editor, ContentRender, ContentModel} from "@/types/VueuvTypes";
 import * as cloneDeep from "lodash/cloneDeep"
 import createUid, {cloneContent} from "@/lib/createUniqueId.ts"
 import Vue from "vue";
+import VueuvEditor from "@/components/VueuvEditor.vue";
 
+export interface SortableVue extends Vue{
+    $editor: VueuvEditor;
+    value: ContentModel;
+
+    move(contents: Array<ContentModel> | undefined, oldIndex: number, newIndex: number): void;
+}
 export default class SortableContent {
-    public vue: ContentRender;
+    public vue: SortableVue;
     public options: Sortable.Options;
     private _sortable: Sortable | undefined;
 
-    get editor(): Editor {
+    get editor(){
         return this.vue.$editor
     }
 
-    constructor(vue: ContentRender, options: Sortable.Options | undefined) {
+    constructor(vue: SortableVue, options: Sortable.Options | undefined) {
         this.vue = vue;
 
         this.options = {
@@ -80,37 +87,40 @@ export default class SortableContent {
     }
 
     onStart(evt: Sortable.SortableEvent) {
-        this.editor.states.isSorting = true;
+        this.editor.contentStates.isSorting = true;
     }
 
     onEnd(evt: Sortable.SortableEvent) {
-        this.editor.states.isSorting = false;
+        this.editor.contentStates.isSorting = false;
     }
 
     onAdd(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'add');
-        let contentValue = {};
+        let contentValue = {
+            tag:'div'
+        };
 
         if (this.editor.hasDragBlock()) {
-            contentValue = cloneContent(this.editor.states.dragBlock);
+            contentValue = cloneContent(this.editor.contentStates.dragBlock);
             evt.item.remove();
         } else {
             console.log(point.item);
             contentValue = cloneContent(this.editor.getContentValueById(point.item));
             evt.item.remove();
         }
+        if(this.vue.value.contents){
+            this.vue.value.contents.splice(point.newIndex, 0, contentValue)
+        }
 
-        this.vue.value.contents.splice(point.newIndex, 0, contentValue)
-        this.vue.updateContents(this.vue.value)
 
     }
 
     onRemove(evt: Sortable.SortableEvent) {
         const point = this.parseEvent(evt, 'remove');
 
-        this.vue.value.contents.splice(point.oldIndex, 1)
+        if(this.vue.value.contents)
+            this.vue.value.contents.splice(point.oldIndex, 1)
 
-        this.vue.updateContents(this.vue.value)
 
     }
 
@@ -119,7 +129,6 @@ export default class SortableContent {
 
         this.vue.move(this.vue.value.contents, point.oldIndex, point.newIndex)
 
-        this.vue.updateContents(this.vue.value)
     }
 
 }

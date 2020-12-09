@@ -49,7 +49,7 @@ export default {
   },
   computed: {
     getStates() {
-      return this.$editor.states;
+      return this.$editor.contentStates;
     }
   },
   methods: {

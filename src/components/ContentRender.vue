@@ -98,7 +98,7 @@ export default {
      * @return {EditorStates}
      * */
     getState() {
-      return this.$editor.states;
+      return this.$editor.contentStates;
     },
     selectedContent: {
       get: function () {
@@ -148,7 +148,9 @@ export default {
     },
     contentStyleObject: {
       get: function () {
-        return this.value.cssObject[this.$editor.getCurrentMedia] || {};
+        const mainCss = this.value.cssObject[this.$editor.getCurrentMedia];
+
+        return Object.assign({}, this.value.cssObject['mobile'], this.value.cssObject['tablet'], mainCss);
       },
       set: function (value) {
         this.$editor.setRollBackPoint();
@@ -217,10 +219,12 @@ export default {
 
     /**
      * @param {CSSStyleDeclaration} style
+     * @param media
      */
-    setCssObject(style) {
-
-      const media = this.$editor.getCurrentMedia;
+    setCssObject(style, media) {
+      if(!media){
+        media = this.$editor.getCurrentMedia;
+      }
       const cssObjectElement = this.value.cssObject[media];
       for (const [key, value] of Object.entries(style)) {
         if(value){
@@ -279,16 +283,16 @@ export default {
     selectorClass() {
       const classes = [];
 
-      if (this.isEditing && this.$editor.config.showGuide) {
+      if (this.isEditing && this.$editor.options.showGuide) {
         classes.push('is-editable');
       }
-      if ((this.isSelectedContent || this.isFocusedContent) && this.$editor.config.showGuide) {
+      if ((this.isSelectedContent || this.isFocusedContent) && this.$editor.options.showGuide) {
         classes.push('is-selected');
       }
       if (this.isLabelBottom) {
         classes.push('label-bottom');
       }
-      if (this.$editor.config.showGrid || this.$editor.states.isSorting) {
+      if (this.$editor.options.showGrid || this.$editor.contentStates.isSorting) {
         classes.push('show-guide');
       }
 
@@ -299,7 +303,7 @@ export default {
         return;
       }
 
-      this.$emit('update:content', contentModelFactory(cloneAll(this.value)))
+      this.$emit('update:content', contentModelFactory(this.value))
     },
     deleteContent() {
 
@@ -447,6 +451,7 @@ export default {
       arr.splice(toIndex, 0, item);
     },
     initSorting() {
+
       if (this.value.contents || this.value.tag === 'div') {
         this.sortable = new SortableContent(this)
         this.sortable.init();
@@ -475,19 +480,6 @@ export default {
   outline: #42b983 2px solid;
 }
 
-/*
-.is-selected:before{
-  content: attr(data-title);
-  position: absolute;
-  background-color: #42b983;
-  padding: 0.2rem 0.4rem;
-  z-index: 10;
-  color: white;
-  font-size: 9px;
-  transform: translate(-2px, -22px);
-
-}
-*/
 .is-editable {
   outline-color: orange;
 }

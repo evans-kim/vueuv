@@ -1,5 +1,3 @@
-import "@/assets/tailwind.css";
-
 import Vue from 'vue'
 import App from './App.vue'
 import VueCompositionAPI from '@vue/composition-api'

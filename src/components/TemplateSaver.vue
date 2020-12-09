@@ -21,69 +21,40 @@
     </div>
   </modal>
 </template>
-<script>
+<script lang="ts">
 import Modal from "@/components/Modal.vue"
 import LocalStore from "@/lib/LocalStore";
-import {cloneAll, getCssProperties} from "@/lib/createUniqueId";
+import {Editor} from "@/types/VueuvTypes";
+import {Component, Inject, InjectReactive, Vue} from "vue-property-decorator";
+import VueuvEditor from "@/components/VueuvEditor.vue";
 
+@Component({
+  components: {Modal}
+})
+export default class TemplateSaver extends Vue{
 
-export default {
-  name: 'TemplateSaver',
-  inject:['$editor'],
-  components: {Modal},
-  data() {
-    return {
-      isShowTemplate: false,
-      templateName: null,
-      isCopyCss: false,
-      store:null
+  @Inject('$editor') readonly $editor!: VueuvEditor
+
+  isShowTemplate = false;
+  isCopyCss = false;
+  templateName = '';
+  store = new LocalStore();
+  show() {
+    this.isShowTemplate = true;
+  }
+
+  deleteTemplate(template) {
+    this.store.remove(template.label);
+  }
+
+  createTemplate() {
+
+    if(!this.$editor.contentStates.focusedContent){
+      return
     }
-  },
-  methods: {
-    show() {
-      this.isShowTemplate = true;
-    },
-    /**
-     *
-     * @param {ContentRender} render
-     */
-    getContentModelByComputedCss(render){
+    const component = this.$editor.contentStates.focusedContent.component;
 
-      const v = cloneAll( render.getValue );
-
-      v.style = Object.assign(getCssProperties(render.$el), v.style);
-
-      if(v.contents && v.contents.length){
-        v.contents = render.$children.map((child)=>{
-          if(!child.isContentRender){
-
-            return false;
-          }
-          return this.getContentModelByComputedCss(child)
-        }).filter(item=>item)
-      }
-      return v;
-    },
-    deleteTemplate(template) {
-      this.store.remove(template.label);
-      this.$editor.refreshMenu();
-    },
-    createTemplate() {
-
-      let cloneTemplate;
-      const component = this.$editor.states.focusedContent.component;
-      if(this.isCopyCss){
-        cloneTemplate = this.getContentModelByComputedCss(component);
-      }else{
-        cloneTemplate = component.value;
-      }
-
-      this.store.set(this.templateName, cloneTemplate);
-      this.$editor.refreshMenu();
-    }
-  },
-  mounted() {
-    this.store = new LocalStore();
+    this.store.set(this.templateName || 'unknown', component.value);
   }
 }
 </script>

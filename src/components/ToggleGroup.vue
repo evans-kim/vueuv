@@ -27,6 +27,9 @@ export default {
   },
   computed:{
     getOptions(){
+      if(!this.value || typeof this.value !== 'object'){
+        return [];
+      }
       return Object.keys(this.value);
     }
   },

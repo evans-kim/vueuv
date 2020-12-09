@@ -1,16 +1,13 @@
 <script lang="ts">
-import Vue, {VNode} from "vue";
+import {VNode} from "vue";
 import {ContentModel} from "@/types/VueuvTypes";
 import {CombinedVueInstance} from "vue/types/vue";
+import {Component, Prop, Vue} from "vue-property-decorator";
 
-export default {
-  name: "ContentExporter",
-  props: {
-    value: {
-      type: [Object, String],
-      required: true
-    } as object | string
-  } as any,
+@Component
+export default class ContentExporter extends Vue{
+  @Prop({type: [Object, String], required: true}) readonly value!: string;
+
   render(h) {
 
     const vm = this as CombinedVueInstance<any, any, any, any, any>;
@@ -35,6 +32,3 @@ export default {
   }
 }
 </script>
-<style>
-
-</style>
