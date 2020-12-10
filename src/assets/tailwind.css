@@ -9,7 +9,7 @@
     @apply bg-green-600 hover:bg-green-500;
 }
 .field-group{
-    @apply border p-2 mb-1 shadow rounded w-full flex flex-wrap items-center;
+    @apply border p-2 mb-1 shadow rounded w-full flex flex-wrap items-center ;
 }
 
 .sub-title{

@@ -1,22 +1,23 @@
 <template>
   <div style="position: relative;" :class="getEditorClass" @click.stop="setDefaultSelect">
-    <menubar/>
+    <template v-if="loadedModel">
+      <menubar/>
+      <div ref="responseFrame" :style="getRenderSectionStyle">
+        <content-render ref="render" v-if="options.editable" :value="contentModel"
+                        @update:content="handleRenderInput"></content-render>
+        <inner-frame v-else ref="iframe"></inner-frame>
+      </div>
+      <template v-if="options.editable">
+        <template-saver ref="templateSaver"></template-saver>
+        <helper ref="helper"></helper>
+      </template>
 
-    <div ref="responseFrame" :style="getRenderSectionStyle">
-      <content-render ref="render" v-if="options.editable" :value="contentModel"
-                      @update:content="handleRenderInput"></content-render>
-      <inner-frame v-else ref="iframe"></inner-frame>
-    </div>
-    <template v-if="options.editable">
-      <template-saver ref="templateSaver"></template-saver>
-      <helper ref="helper"></helper>
+      <content-style ref="styler"></content-style>
+
+      <document :visible.sync="showDocument"></document>
     </template>
-
-    <content-style ref="styler"></content-style>
-    <div class="whitespace-pre">
-      {{ contentModel }}
-    </div>
-    <document :visible.sync="showDocument"></document>
+    <!-- Repository Pattern -->
+    <content-repository dump ref="repository" @load="()=>{loadedModel = true;}"></content-repository>
   </div>
 </template>
 
@@ -25,17 +26,18 @@
 import Helper from "@/components/Helper.vue";
 import Menubar from "@/components/Menubar.vue";
 import createUid from "@/lib/createUniqueId.ts";
-import * as cloneDeep from "lodash/cloneDeep"
+import cloneDeep from "lodash/cloneDeep"
 import TemplateSaver from "@/components/TemplateSaver.vue";
 import Document from "@/components/Document.vue";
 import InnerFrame from "@/components/InnerFrame.vue";
-import {Component, Prop, Provide, Ref, Vue, Watch} from "vue-property-decorator";
+import {Component, Prop, Ref, Vue, Watch} from "vue-property-decorator";
 import {ContentModel, EditorStates} from "@/types/VueuvTypes";
 import ContentStyle from "@/components/ContentStyle.vue";
+import ContentRepository from "@/components/ContentRepository.vue";
 
 @Component({
   name: "VueuvEditor",
-  components: {InnerFrame, Document, TemplateSaver, Menubar, Helper},
+  components: {ContentRepository, InnerFrame, Document, TemplateSaver, Menubar, Helper},
   provide(){
     return {['$editor']: this}
   }
@@ -70,24 +72,22 @@ export default class VueuvEditor extends Vue {
   };
 
   contentStates = {
-    selectedContent: null,
-    focusedContent: null,
-    editingContent: null,
+    selectedContent: undefined,
+    focusedContent: undefined,
+    editingContent: undefined,
+    dragBlock: undefined,
     isSorting: false,
-    dragBlock: null
-  } as unknown as EditorStates;
+  } as EditorStates;
 
-  contentModel = {
-    tag: 'div',
-    id: 'vueuv-content-root',
-    isRootContent: true,
-    cssObject: {
-      desktop: {},
-      tablet: {},
-      mobile: {}
-    },
-    contents: []
-  } as ContentModel;
+  loadedModel = false;
+  @Ref('repository') readonly repository!: ContentRepository
+
+  get contentModel(){
+    return this.repository?.model;
+  }
+  set contentModel(value){
+    this.repository?.setModel(value);
+  }
 
   logs = [] as Array<Function>;
   showDocument = false;
@@ -127,6 +127,7 @@ export default class VueuvEditor extends Vue {
       desktop: '#',
       tablet: '@media screen and (max-width: 1080px)',
       mobile: '@media screen and (max-width: 480px)',
+      extra: ''
     }
   }
 
@@ -202,10 +203,6 @@ export default class VueuvEditor extends Vue {
     }
   }
 
-  /**
-   * @param {string} id
-   * @param {ContentRender} vue
-   */
   getContentRenderById(id, vue) {
 
     if (!vue || typeof vue !== 'object') {
@@ -238,15 +235,16 @@ export default class VueuvEditor extends Vue {
       if (!myWindow) {
         throw new Error('Window not found');
       }
-      const docu = this.iframe.getFrame.document;
-
-      myWindow.document.head.innerHTML = docu.head.innerHTML;
-      myWindow.document.body.innerHTML = docu.body.innerHTML;
+      const docu = this.iframe.getFrame?.document;
+      if(docu){
+        myWindow.document.head.innerHTML = docu.head.innerHTML;
+        myWindow.document.body.innerHTML = docu.body.innerHTML;
+      }
     })
   }
 
   getHtml() {
-    return this.iframe.getFrame.document.body.outerHTML
+    return this.iframe.getFrame?.document.body.outerHTML
   }
 
   @Ref() readonly styler!: ContentStyle
@@ -318,7 +316,7 @@ export default class VueuvEditor extends Vue {
   }
 
   setDefaultSelect() {
-    this.contentStates.selectedContent = null;
+    this.contentStates.selectedContent = undefined;
   }
 
   mounted() {

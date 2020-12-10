@@ -55,7 +55,7 @@
 
 <script lang="ts">
 import VuButton from "@/components/VuButton.vue";
-import * as clone from "lodash/cloneDeep"
+import cloneDeep from "lodash/cloneDeep"
 import SortableContent, {SortableVue} from "@/lib/SortableContent";
 import LocalStore from "@/lib/LocalStore";
 import ToggleGroup from "@/components/ToggleGroup.vue";
@@ -114,7 +114,7 @@ export default class Menubar extends Vue {
           console.warn('Data-block-index not found')
           return;
         }
-        const block = clone(component().getBlocks[index].contentDefault);
+        const block = cloneDeep(component().getBlocks[index].contentDefault);
         block.tag = component().camelToSnakeCase(component().getBlocks[index].name).substring(1);
         component().$editor.contentStates.dragBlock = block;
       },

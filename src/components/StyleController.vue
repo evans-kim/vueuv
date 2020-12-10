@@ -94,7 +94,6 @@ export default {
   methods: {
     syncCssText(){
       this.$editor.$refs.helper
-      //this.focusedContent.value.cssText =
     },
     updateCssObject(style){
       const media = this.$editor.getCurrentMedia;

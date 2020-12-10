@@ -1,21 +1,21 @@
 <template>
   <div>
     <class-tag-input :value="getTargetClasses" @input="classHandler"></class-tag-input>
+
     <div class="my-1 p-1">
       <div class="flex items-baseline flex-1">
         <ev-tag>Class</ev-tag>
-        <div>
-          <button class="btn btn-green" v-for="(cls, idx) in getTargetClasses" :key="idx"
-                  @click.stop="addClassToCssText(cls)">
-            {{ cls }}
-          </button>
-        </div>
+        <ev-tag color="green" v-for="(cls, idx) in getTargetClasses" :key="idx"
+                @click.stop="addClassToCssText(cls)">
+          {{ cls }}
+        </ev-tag>
       </div>
       <div>
         <ev-tag>ID</ev-tag>
-        <button class="btn btn-green" @click.stop="addIdSelectorToCssText">#{{ focusedContent.value.id }}</button>
+        <ev-tag color="green" @click.stop="addIdSelectorToCssText">#{{ focusedContent.value.id }}</ev-tag>
       </div>
     </div>
+    <h4>Style</h4>
     <code-editor v-model="getTargetStyleText"></code-editor>
   </div>
 </template>
@@ -25,8 +25,8 @@ import {attributeToCss} from "@/lib/createUniqueId";
 import CodeEditor from "@/components/CodeEditor.vue";
 
 import Vue from "vue";
-import {ContentRender} from "@/types/VueuvTypes";
-import cssToObject from 'css-to-object'
+import ContentRender from "@/components/ContentRender.vue";
+import cssToObject from '@/lib/CssParser'
 import ClassTagInput from "@/components/ClassTagInput.vue";
 import {Component, Inject} from "vue-property-decorator";
 import VueuvEditor from "@/components/VueuvEditor.vue";
@@ -34,14 +34,14 @@ import EvTag from "@/components/forms/EvTag.vue";
 
 @Component({
   name: "StyleTextEditor",
-  components: {EvTag, ClassTagInput, CodeEditor},
+  components: {EvTag, ClassTagInput, CodeEditor}
 })
 export default class StyleTextEditor extends Vue {
   @Inject('$editor') readonly $editor!: VueuvEditor;
 
   get focusedContent(): ContentRender {
     if(!this.$editor.contentStates.focusedContent || !this.$editor.contentStates.focusedContent.component){
-      throw new Error('focusedContent cound not be found.');
+      throw new Error('focusedContent could not be found.');
     }
     return this.$editor.contentStates.focusedContent.component;
   }
@@ -59,42 +59,49 @@ export default class StyleTextEditor extends Vue {
       if (media === 'desktop') {
         return attributeToCss({['#' + content.id]: content.cssObject.desktop})
       }
-      return [query + "{\n", attributeToCss({['#' + content.id]: content.cssObject[media]}, 2), "}\n"].join("");
+      if (media === 'extra'){
+        if(content.cssObject.extra)
+          return attributeToCss(content.cssObject.extra)
+        else
+          return ;
+      }
+      return attributeToCss({[query]:{['#' + content.id]: content.cssObject[media]}})
     }).join("\n")
   }
   get getTargetClasses(){
     return this.focusedContent.value.class || []
   }
   get getTargetStyleText() {
-    const text = this.focusedContent.value.cssText || ''
-    if (!text) {
-      return this.getCssObjectToString;
-    }
-    return text;
+    return this.getCssObjectToString || ''
   }
 
   set getTargetStyleText(value) {
-    this.focusedContent.value.cssText = value;
+
+    //this.focusedContent.value.cssText = value;
 
     const object = cssToObject(value || '', {
       camelCase: false,
       numbers: false
     }) as object;
 
+    this.focusedContent.value.cssObject.extra = {};
+
     Object.entries(object).map(([key, value]) => {
+      if(!value){
+        return;
+      }
       const id = "#" + this.focusedContent.value.id;
       if (key === id) {
         this.focusedContent.setCssObject(value, 'desktop')
-      }
-      if (key === this.$editor.mediaQuery.tablet) {
+      }else if (key === this.$editor.mediaQuery.tablet) {
         this.focusedContent.setCssObject(value[id], 'tablet')
-      }
-      if (key === this.$editor.mediaQuery.mobile) {
+      }else if (key === this.$editor.mediaQuery.mobile) {
         this.focusedContent.setCssObject(value[id], 'mobile')
+      }else{
+        this.focusedContent.setCssObject({[key] : value}, 'extra')
       }
     });
 
-    console.log('getTargetStyleText', object);
 
   }
 

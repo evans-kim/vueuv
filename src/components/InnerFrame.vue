@@ -16,7 +16,7 @@ export default class InnerFrame extends Vue{
 
   @Ref() readonly iframe!: HTMLIFrameElement;
 
-  get getFrame(): Window {
+  get getFrame(): Window | null {
     if(!this.iframe.contentWindow){
       return null;
     }
@@ -44,10 +44,10 @@ export default class InnerFrame extends Vue{
 
   appendToFrame(element, target = 'head') {
     if (typeof element === 'string') {
-      this.getFrame.document[target].appendChild(this.htmlToElement(element))
+      this.getFrame?.document[target].appendChild(this.htmlToElement(element))
       return;
     }
-    this.getFrame.document[target].appendChild(element);
+    this.getFrame?.document[target].appendChild(element);
   }
 
   scrapLinks() {
@@ -99,7 +99,7 @@ export default class InnerFrame extends Vue{
 
     const Editor = this.$editor;
 
-    const element = this.getFrame.document.getElementById('render-frame');
+    const element = this.getFrame?.document.getElementById('render-frame');
 
     this.renderComponent = new Vue({
       provide() {
@@ -116,7 +116,7 @@ export default class InnerFrame extends Vue{
           h('content-style')
         ]);
       }
-    }).$mount(element || this.getFrame.document.body);
+    }).$mount(element || this.getFrame?.document.body);
 
   }
   htmlToElement(html) {

@@ -24,8 +24,7 @@
 <script lang="ts">
 import Modal from "@/components/Modal.vue"
 import LocalStore from "@/lib/LocalStore";
-import {Editor} from "@/types/VueuvTypes";
-import {Component, Inject, InjectReactive, Vue} from "vue-property-decorator";
+import {Component, Inject, Vue} from "vue-property-decorator";
 import VueuvEditor from "@/components/VueuvEditor.vue";
 
 @Component({

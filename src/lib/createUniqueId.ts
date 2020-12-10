@@ -1,6 +1,7 @@
 import cloneDeep from "lodash/cloneDeep";
-import {ContentModel, Editor} from "@/types/VueuvTypes";
+import {ContentModel} from "@/types/VueuvTypes";
 import Vue from "vue";
+import VueuvEditor from "@/components/VueuvEditor.vue";
 
 export default function createUid(): string {
     return "vv" + Math.random().toString(36).substr(2, 6);
@@ -74,43 +75,19 @@ export function cloneContent(content): ContentModel {
     return duplicate;
 }
 
-export function getCssProperties(element: HTMLElement) {
-
-    const targetObjsStyles = window.getComputedStyle(element);
-
-    const tempCopyOfTarget = document.createElement(element.tagName);
-    document.body.insertAdjacentElement('afterbegin', tempCopyOfTarget);
-
-    const basicElementsCSS = window.getComputedStyle(tempCopyOfTarget);
-
-    const cleanSetOfStyles = {};
-    const exp = /webkit.*/
-    Object.entries(targetObjsStyles).forEach((p: any) => {
-        if (exp.test(p)) {
-            return;
-        }
-        if (basicElementsCSS[p[0]] !== p[1]) {
-            cleanSetOfStyles[p[0]] = p[1];
-        }
-
-    });
-
-    tempCopyOfTarget.remove()
-    return cleanSetOfStyles;
-}
-
-export function attributeToCss(attribute, depth = 1) {
+export function attributeToCss(attribute, depth = 0) {
     const spaces = "  ".repeat(depth);
     return Object.keys(attribute).map(k => {
         const v = attribute[k];
         if (typeof v === 'object') {
             const toCss = attributeToCss(v, depth+1);
-            return `${spaces}${k} {\n  ${toCss}\n  }\n`;
+            
+            return `${spaces}${k} {\n${toCss}\n${spaces}}`;
         }
-        return `${spaces}${k}: ${v};\n`;
-    }).join("")
+        return `${spaces}${k}: ${v};`;
+    }).join("\n")
 }
-export function cssObjectToCssText(content, $editor: Editor) {
+export function cssObjectToCssText(content, $editor: VueuvEditor) {
 
     if(typeof content === 'string'){
         return null;
@@ -124,7 +101,7 @@ export function cssObjectToCssText(content, $editor: Editor) {
             return attributeToCss({['#'+content.id]:value})
         }
         const mediaQuery = $editor.mediaQuery[media]
-        return [mediaQuery + "{\n", attributeToCss({['#'+content.id]:value}), "}\n"].join("");
+        return [mediaQuery + "{\n", attributeToCss({['#'+content.id]:value}), "}"].join("\n");
     });
 
     if( !content.contents || !content.contents.length){

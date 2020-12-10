@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import {Component, Inject, InjectReactive, Vue} from "vue-property-decorator";
+import {Component, Inject, Vue} from "vue-property-decorator";
 import VueuvEditor from '@/components/VueuvEditor.vue';
 
 @Component
@@ -18,13 +18,14 @@ export default class ContentStyle extends Vue{
     const desktopCss = this.getCssByMedia(this.$editor.contentModel, 'desktop');
     const tablet = this.getCssByMedia(this.$editor.contentModel, 'tablet');
     const mobile = this.getCssByMedia(this.$editor.contentModel, 'mobile');
+    const extra = this.getCssByMedia(this.$editor.contentModel, 'extra');
     switch (this.$editor.getCurrentMedia) {
       case "tablet":
-        return [mobile, desktopCss, tablet].join('')
+        return [mobile, desktopCss, tablet, extra].join('')
       case "mobile":
-        return [tablet, desktopCss, mobile].join('')
+        return [tablet, desktopCss, mobile, extra].join('')
       default:
-        return [mobile, tablet, desktopCss].join('')
+        return [mobile, tablet, desktopCss, extra].join('')
     }
   }
 
@@ -35,8 +36,8 @@ export default class ContentStyle extends Vue{
     const desktopCss = this.getCssByMedia(this.$editor.contentModel, 'desktop');
     const tablet = this.$editor.mediaQuery.tablet + "{\n  " + this.getCssByMedia(this.$editor.contentModel, 'tablet') + "\n}";
     const mobile = this.$editor.mediaQuery.mobile + "{\n" + this.getCssByMedia(this.$editor.contentModel, 'mobile') + "\n}";
-
-    return [desktopCss, tablet, mobile].join("\n");
+    const extra = this.getCssByMedia(this.$editor.contentModel, 'extra');
+    return [desktopCss, tablet, mobile, extra].join("\n");
   }
 
   get getCode() {
@@ -58,6 +59,9 @@ export default class ContentStyle extends Vue{
   getCssTextWithObject(content, media){
     if(!content.cssObject || !content.cssObject[media] || Object.keys(content.cssObject[media]).length === 0){
       return null;
+    }
+    if(media === 'extra'){
+      return (content.cssObject[media]) ? this.attributeToCss(content.cssObject[media]) : null;
     }
     return (content.cssObject[media]) ? this.attributeToCss({['#' + content.id]: content.cssObject[media]}) : null;
   }

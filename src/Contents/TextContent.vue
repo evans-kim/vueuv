@@ -100,7 +100,7 @@ export default {
           'insertdatetime media table paste code help wordcount'
         ],
         font_formats:'Noto Sans KR=Noto Sans KR,sans-serif;',
-        toolbar: 'undo redo | fontselect fontsizeselect formatselect | ' +
+        toolbar: 'undo redo | ' +
             'bold italic backcolor | forecolor backcolor casechange permanentpen formatpainter removeformat | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
             'help',

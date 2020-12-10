@@ -55,7 +55,7 @@ import StyleController from "@/components/StyleController.vue";
 import StyleTextEditor from "@/components/StyleTextEditor.vue";
 import {Component, Inject, InjectReactive, Watch} from "vue-property-decorator";
 import Vue from "vue";
-import {ContentRender} from "@/types/VueuvTypes";
+import ContentRender from "@/components/ContentRender.vue";
 import TemplateSaver from "@/components/TemplateSaver.vue";
 import VueuvEditor from "@/components/VueuvEditor.vue";
 
@@ -70,7 +70,7 @@ export default class Helper extends Vue {
   @Inject('$editor') readonly $editor!: VueuvEditor
 
   //DATA
-  activeTab = 'class';
+  activeTab = 'style';
   getStyle = {
     display: 'none',
     justifyContent: 'baseline',
@@ -163,10 +163,10 @@ export default class Helper extends Vue {
     if (!this.focusedContent) {
       return null;
     }
-    if(!this.focusedContent.parent.value.contents){
+    if(!this.focusedContent.parentValue?.contents){
       return null;
     }
-    return this.focusedContent.parent.value.contents.map(content => content.id).indexOf(this.focusedContent.value.id)
+    return this.focusedContent.parentValue?.contents.map(content => content.id).indexOf(this.focusedContent.getValue.id)
   }
 
   resetPosition() {
@@ -261,10 +261,10 @@ export default class Helper extends Vue {
 
     this.$editor.setRollBackPoint();
 
-    if (!this.focusedContent.value.contents) {
+    if (!this.focusedContent.getValue.contents) {
 
       this.parentContents.map((item, index) => {
-        if ( this.focusedContent && item.id === this.focusedContent.value.id) {
+        if ( this.focusedContent && item.id === this.focusedContent.getValue.id) {
           this.parentContents.splice(index + 1, 0, cloneContent({
             tag: 'div',
             class: ['p-2'],
@@ -275,7 +275,7 @@ export default class Helper extends Vue {
       this.$editor.options.showGrid = true;
       return;
     }
-    this.$set(this.focusedContent.value.contents, this.focusedContent.value.contents.length, cloneContent({
+    this.$set(this.focusedContent.getValue.contents, this.focusedContent.getValue.contents.length, cloneContent({
       tag: 'div',
       id: createUid(),
       class: ['p-2'],
@@ -284,16 +284,16 @@ export default class Helper extends Vue {
     this.$editor.options.showGrid = true;
   }
   get parentContents(){
-    if(!this.focusedContent || !this.focusedContent.parent.value.contents){
+    if(!this.focusedContent || !this.focusedContent.parentValue?.contents){
       return [];
     }
-    return this.focusedContent.parent.value.contents;
+    return this.focusedContent.parentValue.contents;
   }
   deleteContents() {
     this.$editor.setRollBackPoint();
     let i = 0;
     this.parentContents.map((content, index) => {
-      if (this.focusedContent && this.focusedContent.value === content) {
+      if (this.focusedContent && this.focusedContent.getValue === content) {
         i = index;
       }
     })

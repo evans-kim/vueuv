@@ -23,7 +23,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build:plugin": "vue-cli-service build src/plugin.js --dest=lib --target=lib",
+    "build:plugin": "vue-cli-service build src/plugin.ts --dest=lib --target=lib",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
@@ -33,6 +33,7 @@
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.6",
     "@types/sortablejs": "^1.10.6",
+    "@uppercod/css-to-object": "^1.0.2",
     "@vue/composition-api": "^1.0.0-beta.20",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.8.0",

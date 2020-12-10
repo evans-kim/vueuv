@@ -1,6 +1,5 @@
-import Sortable, {MultiDrag, Swap, OnSpill, AutoScroll} from "sortablejs";
-import {Editor, ContentRender, ContentModel} from "@/types/VueuvTypes";
-import * as cloneDeep from "lodash/cloneDeep"
+import Sortable from "sortablejs";
+import {ContentModel} from "@/types/VueuvTypes";
 import createUid, {cloneContent} from "@/lib/createUniqueId.ts"
 import Vue from "vue";
 import VueuvEditor from "@/components/VueuvEditor.vue";
@@ -20,7 +19,7 @@ export default class SortableContent {
         return this.vue.$editor
     }
 
-    constructor(vue: SortableVue, options: Sortable.Options | undefined) {
+    constructor(vue: SortableVue, options?: Sortable.Options) {
         this.vue = vue;
 
         this.options = {
@@ -62,7 +61,7 @@ export default class SortableContent {
         }
     }
 
-    init(element: HTMLElement | null) {
+    init(element?: HTMLElement) {
         this._sortable = Sortable.create((element) ? element : this.vue.$el as HTMLElement, this.options);
     }
 
@@ -109,7 +108,7 @@ export default class SortableContent {
             evt.item.remove();
         }
         if(this.vue.value.contents){
-            this.vue.value.contents.splice(point.newIndex, 0, contentValue)
+            this.vue.value.contents.splice(point.newIndex, 0, contentValue as ContentModel)
         }
 
 
