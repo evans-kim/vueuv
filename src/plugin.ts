@@ -7,7 +7,11 @@ import Helper from "@/components/Helper.vue";
 import ModalPlugin from "@/lib/ModalPlugin";
 import VTooltip from 'v-tooltip'
 
-export {VueuvEditor};
+import TextContent from "@/Contents/TextContent.vue"
+import BasicImage from '@/Contents/BasicImage.vue'
+import Anchor from "@/Contents/Anchor.vue";
+
+export {VueuvEditor, TextContent, BasicImage, Anchor };
 export default {
     install(Vue, options) {
         // 툴팁 플러그인 설치

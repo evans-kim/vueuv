@@ -71,10 +71,7 @@ export default class ContentRepository extends Vue{
     })
   }
 
-  factory(content?: ContentModel | string) {
-    if (typeof content === 'string') {
-      return content;
-    }
+  factory(content?: ContentModel ) {
 
     if(!content){
       content = this.defaultModel;

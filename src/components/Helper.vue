@@ -208,7 +208,6 @@ export default class Helper extends Vue {
 
     await this.$nextTick(() => {
 
-
       // 화면을 왼쪽으로 넘어 간다면?
       const number = window.innerWidth - (pointX + me.width);
       if (number < 0) {
@@ -297,6 +296,9 @@ export default class Helper extends Vue {
   }
 
   copy() {
+    if(!this.focusedContent){
+      return ;
+    }
     this.$editor.setRollBackPoint();
     let i = 0;
     this.parentContents.map((content, index) => {
@@ -304,6 +306,7 @@ export default class Helper extends Vue {
         i = index;
       }
     })
+
     const deep = this.$editor.repository.makeClone( this.focusedContent?.value );
 
     this.parentContents.splice(i, 0, deep)

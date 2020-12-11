@@ -1,31 +1,49 @@
-# VUEUV : Vue User-friendly Editor Used only Vue
+# VUEUV : Vue User-friendly Editor Used by Vue
 
-## Feature 
-- WYSIWYG HTML Editor.
-- Drag and drop handling support.
-- One Tree data structure ( inspired by editors.js )
-- Easy customization for content module. 
-    - It's just Vue application. So, you don't need to learn anything to customize it.
-    - **Any Vue components you have can be used as content.**
-- If you have enough Vue components, you can use this as CMS.
- 
-## Notice
-- It's beta version. So, any interface, code can be changed. 
+## VUEUV 는 무엇입니까?
 
-## Project setup
+- Vue 로 만든 WYSIWYG HTML 에디터 입니다.
+
+## 이미 많은 에디터가 있는데 왜 VUEUV 를 써야 하죠?
+
+- Vueuv는 기존의 자바스크립트 에디터를 랩핑한 것이 아니라, 순전히 vue component 의 조합으로 만들어졌습니다.
+  - 당신이 가진 Vue 컴포넌트를 아주 쉽게 에디터에 삽입할 수 있습니다. 캐로젤 컴포넌트든지 삽입할 수 있으며 당신이 원하는 컨트롤 핼퍼를 제공할 수 있습니다.
+  - 에디터는 뷰 컴포넌트의 조합이므로 어떤 컴포넌트든지 꺼내어 쉽게 커스터마이즈할 수 있습니다. 즉, 각 파트별로 당신의 프로젝트에 주입하여 당신만의 에디터를 구성하기 수월합니다.
+  - 주요한 컴포넌트들은 모두 vue-decorator-property를 이용한 typescript 로 구성되어 있어 개발 접근성이 좋습니다.
+
+- Editors.js 와 같이 하나의 트리구조로 통일된 리액티브 모델을 조작하는 것으로 간단하게 업데이트 할 수 있습니다.
+  - 이러한 리액티브 트리구조는 데이터 컨트롤이 쉬워집니다. 외부에서 에디터 내부를 변경하기 위해서 어떤 학습이나 구조의 파악이 필요 없고 값을 직접 변경해주기만 하면 됩니다.
+
+- Vueuv는 사용자가 자신이 만든 결과물의 일부분을 저장하는 기능을 제공합니다.
+  - 개발자가 제공한 컨덴츠의 스타일을 마음대로 변경하고 이를 조합하여 하나의 템플릿으로 저장하면 이후에 사용자가 이를 불러와 쓸 수 있습니다.  
+  - 즉, 개발자는 기능만 제공하면 되고 스타일은 사용자가 마음대로 변형하니 개발자가 만든 컴포넌트의 여백,마진,색상을 바꾸어줄 수고가 줄어 듭니다.
+
+## 데모페이지
+
+- https://evans-kim.github.com/vueuv
+  
+## 주의사항
+
+- 정식 릴리즈가 아니므로 내부의 코드가 사전에 안내없이 바뀔 수 있습니다.
+
+## 설치방법
+
 ```
 npm install
 ```
 
 ### Compiles and hot-reloads for development
+
 ```
 npm run serve
 ```
 
 ### Compiles and minifies for production
+
 ```
 npm run build
 ```
 
-##Licence
+## Licence
+
 MIT
