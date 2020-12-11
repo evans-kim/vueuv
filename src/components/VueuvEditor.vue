@@ -12,7 +12,7 @@
         <helper ref="helper"></helper>
       </template>
 
-      <content-style ref="styler"></content-style>
+      <content-style ref="styler" id="styler"></content-style>
 
       <document :visible.sync="showDocument"></document>
     </template>
@@ -194,7 +194,7 @@ export default class VueuvEditor extends Vue {
       return null;
     }
     for (let i = 0; i < parent.contents.length; i++) {
-      console.log(parent.contents[i]);
+
       const content = parent.contents[i];
       if (value === content) {
         return parent;
@@ -230,7 +230,7 @@ export default class VueuvEditor extends Vue {
     this.$nextTick(() => {
       const width = parseInt( this.frame.width );
       const features = `width=${width},height=800`;
-      console.log(features);
+
       const myWindow = window.open("", "export", features);
       if (!myWindow) {
         throw new Error('Window not found');
@@ -320,7 +320,7 @@ export default class VueuvEditor extends Vue {
   }
 
   mounted() {
-    console.log(this);
+
     if (this.target) {
       const target = document.getElementById(this.target);
       if(!target){

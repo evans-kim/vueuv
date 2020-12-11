@@ -23,6 +23,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "build:dev": "rm -rf ./public && vue-cli-service build --mode development",
     "build:plugin": "vue-cli-service build src/plugin.ts --dest=lib --target=lib",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
@@ -33,12 +34,10 @@
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.6",
     "@types/sortablejs": "^1.10.6",
-    "@uppercod/css-to-object": "^1.0.2",
     "@vue/composition-api": "^1.0.0-beta.20",
     "autoprefixer": "^9.8.6",
     "core-js": "^3.8.0",
     "css-to-object": "^1.1.0",
-    "cssom": "^0.4.4",
     "dom-inspector": "^1.2.4",
     "lodash": "^4.17.20",
     "postcss": "^7.0.35",
@@ -58,10 +57,8 @@
     "@typescript-eslint/parser": "^2.33.0",
     "@vue/cli-plugin-babel": "^4.5.9",
     "@vue/cli-plugin-eslint": "^4.5.9",
-    "@vue/cli-plugin-router": "^4.5.9",
     "@vue/cli-plugin-typescript": "^4.5.9",
     "@vue/cli-plugin-unit-mocha": "^4.5.9",
-    "@vue/cli-plugin-vuex": "^4.5.9",
     "@vue/cli-service": "^4.5.9",
     "@vue/eslint-config-typescript": "^5.0.2",
     "@vue/test-utils": "^1.1.1",

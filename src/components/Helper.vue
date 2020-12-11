@@ -53,7 +53,7 @@ import createUid, {cloneContent} from "@/lib/createUniqueId.ts";
 import ContentTree from "@/components/ContentTree.vue";
 import StyleController from "@/components/StyleController.vue";
 import StyleTextEditor from "@/components/StyleTextEditor.vue";
-import {Component, Inject, InjectReactive, Watch} from "vue-property-decorator";
+import {Component, Inject, Watch} from "vue-property-decorator";
 import Vue from "vue";
 import ContentRender from "@/components/ContentRender.vue";
 import TemplateSaver from "@/components/TemplateSaver.vue";
@@ -61,10 +61,6 @@ import VueuvEditor from "@/components/VueuvEditor.vue";
 
 @Component({
   components: {StyleTextEditor, StyleController, ContentTree},
-  data() {
-    return {}
-  },
-  watch: {}
 })
 export default class Helper extends Vue {
   @Inject('$editor') readonly $editor!: VueuvEditor
@@ -89,7 +85,7 @@ export default class Helper extends Vue {
 
   //watch
   @Watch('editorMedia')
-  watchEditorMedia(media) {
+  watchEditorMedia() {
     if (!this.getFocusedContent) {
       return;
     }
@@ -308,7 +304,7 @@ export default class Helper extends Vue {
         i = index;
       }
     })
-    const deep = cloneContent(this.focusedContent && this.focusedContent.value);
+    const deep = this.$editor.repository.makeClone( this.focusedContent?.value );
 
     this.parentContents.splice(i, 0, deep)
   }

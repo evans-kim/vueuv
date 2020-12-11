@@ -2,5 +2,7 @@ module.exports = {
     publicPath: process.env.NODE_ENV === 'production'
         ? '/vueuv/'
         : '/',
-    outputDir:'docs'
+    outputDir:process.env.NODE_ENV === 'production'
+        ? 'docs'
+        : 'public',
 }

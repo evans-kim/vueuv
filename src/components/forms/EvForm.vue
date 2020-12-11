@@ -43,7 +43,7 @@ export default {
     },
     setFieldValue(field, value) {
       if (!this.value || typeof this.value !== 'object') {
-        console.log('undefined model');
+
         return null;
       }
       const source = {[field]:value};

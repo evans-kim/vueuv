@@ -5,10 +5,9 @@ import ContentRender from "@/components/ContentRender.vue";
 import ContentStyle from "@/components/ContentStyle.vue";
 import Helper from "@/components/Helper.vue";
 import ModalPlugin from "@/lib/ModalPlugin";
-
-export {VueuvEditor};
 import VTooltip from 'v-tooltip'
 
+export {VueuvEditor};
 export default {
     install(Vue, options) {
         // 툴팁 플러그인 설치
@@ -33,13 +32,12 @@ export default {
             Vue.prototype.$vueuvModal = new ModalPlugin();
         }
 
-        Vue.component(InnerText.name, InnerText);
-        Vue.component(ContentRender.name, ContentRender);
-        Vue.component(VueuvEditor.name, VueuvEditor);
-        Vue.component(ContentStyle.name, ContentStyle);
-        Vue.component(ContentExporter.name, ContentExporter);
-        Vue.component(Helper.name, Helper);
-
+        Vue.component('VueuvEditor', VueuvEditor);
+        Vue.component('InnerText', InnerText);
+        Vue.component('ContentRender', ContentRender);
+        Vue.component('ContentStyle', ContentStyle);
+        Vue.component('ContentExporter', ContentExporter);
+        Vue.component('Helper', Helper);
         /**
          * 커스텀 컴포넌트에 셀렉트에 필요한 이벤트를 추가하는 다이렉티브
          */

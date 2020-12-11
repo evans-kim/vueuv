@@ -38,13 +38,13 @@ export default {
       this.$set(this.popoverStyle, 'top', rect.y + rect.height + this.gap + 'px');
     },
     handleEnter(event) {
-      console.log(event)
+
       this.getPoints();
     }
   },
   mounted() {
     this.getPoints();
-    console.log(this);
+
   }
 }
 </script>

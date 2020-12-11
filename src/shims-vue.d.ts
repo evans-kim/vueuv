@@ -7,7 +7,6 @@ declare module '*.vue' {
 }
 
 declare module 'vue/types/vue' {
-
   interface VueConstructor {
     $vueuePlugins: Array<ComponentOptions<any>>;
     $vueuvModal: ModalPlugin;

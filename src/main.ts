@@ -1,3 +1,6 @@
+import './assets/tailwind.css'
+import './assets/icofont.css'
+
 import Vue from 'vue'
 import App from './App.vue'
 import VueCompositionAPI from '@vue/composition-api'
@@ -18,13 +21,10 @@ Vue.use(Vueuv, {
     ]
 });
 
-import './assets/tailwind.css'
-import '@/assets/icofont.css'
-
 Vue.config.productionTip = false
 
 const VM = new Vue({
-    render: h => h(App)
+    render: h => h(App),
 }).$mount('#app')
 
 export default VM;

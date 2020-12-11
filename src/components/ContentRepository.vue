@@ -80,11 +80,6 @@ export default class ContentRepository extends Vue{
       content = this.defaultModel;
     }
 
-    let oldId;
-
-    if(content.id){
-      oldId = content.id;
-    }
     if(!content.id){
       content.id = this.createUid();
     }
@@ -104,13 +99,6 @@ export default class ContentRepository extends Vue{
 
     if(!content.tag){
       content.tag = 'div';
-    }
-
-    if (content.cssText && oldId) {
-      const regexp = new RegExp("#"+oldId, 'ig');
-      content.cssText = content.cssText.replace(regexp,  "#"+content.id )
-    } else {
-      content.cssText = '';
     }
 
     this.reactive(content);
@@ -134,7 +122,10 @@ export default class ContentRepository extends Vue{
   }
 
   makeClone(model: ContentModel){
-    return this.factory(cloneDeep(model));
+
+    const content = cloneDeep(model);
+    content.id = this.createUid();
+    return this.factory(content);
   }
 
   getModelById(id, parent?: ContentModel){

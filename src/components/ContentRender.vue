@@ -244,6 +244,12 @@ export default class ContentRender extends Vue {
     for (const [key, value] of Object.entries(style)) {
       if (value) {
         this.$set(cssObjectElement, key, value);
+        if(typeof value === 'object'){
+          for (const [k,v] of Object.entries(value)) {
+            this.$set(cssObjectElement[key], k, v);
+          }
+        }
+
         continue;
       }
       if (!value && cssObjectElement[key]) {
