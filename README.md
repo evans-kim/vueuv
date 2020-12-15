@@ -20,7 +20,7 @@
 
 ## 데모페이지
 
-- https://evans-kim.github.com/vueuv
+- https://evans-kim.github.io/vueuv
   
 ## 주의사항
 
