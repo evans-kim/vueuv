@@ -11,6 +11,7 @@ import TextContent from "@/Contents/TextContent.vue"
 import BasicImage from '@/Contents/BasicImage.vue'
 import Anchor from "@/Contents/Anchor.vue";
 
+
 export {VueuvEditor, TextContent, BasicImage, Anchor };
 export default {
     install(Vue, options) {
@@ -33,9 +34,8 @@ export default {
             });
 
             Vue.$vueuePlugins = options.plugins;
-            Vue.prototype.$vueuvModal = new ModalPlugin();
         }
-
+        Vue.$vueuvModal = new ModalPlugin();
         Vue.component('VueuvEditor', VueuvEditor);
         Vue.component('InnerText', InnerText);
         Vue.component('ContentRender', ContentRender);

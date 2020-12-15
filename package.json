@@ -2,35 +2,20 @@
   "name": "@evans-kim/vueuv",
   "version": "0.0.1",
   "private": false,
+  "description": "Vue User-friendly html Editor Used only Vue",
   "author": {
     "email": "evans@kakao.com",
     "name": "Evans Kim"
   },
-  "keywords": [
-    "wysiwyg",
-    "html-editor",
-    "cms",
-    "vue",
-    "vuejs"
-  ],
-  "license": "MIT",
-  "description": "Vue User-friendly html Editor Used only Vue",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/evans-kim/vueuv.git"
-  },
-  "main": "lib/vueuv.umd.min.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build:dev": "rm -rf ./public && vue-cli-service build --mode development",
-    "build:plugin": "vue-cli-service build src/plugin.ts --dest=lib --target=lib",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "build:dev": "rm -rf ./public && vue-cli-service build --mode development",
+    "build:plugin": "vue-cli-service build src/plugin.ts --dest=lib --target=lib"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
-  },
+  "main": "lib/vueuv.umd.min.js",
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.6",
     "@types/sortablejs": "^1.10.6",
@@ -72,5 +57,20 @@
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.2",
     "vue-template-compiler": "^2.6.11"
+  },
+  "keywords": [
+    "wysiwyg",
+    "html-editor",
+    "cms",
+    "vue",
+    "vuejs"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evans-kim/vueuv.git"
   }
 }

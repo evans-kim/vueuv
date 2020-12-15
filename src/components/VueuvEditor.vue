@@ -30,11 +30,11 @@ import cloneDeep from "lodash/cloneDeep"
 import TemplateSaver from "@/components/TemplateSaver.vue";
 import Document from "@/components/Document.vue";
 import InnerFrame from "@/components/InnerFrame.vue";
-import {Component, Prop, Ref, Vue, Watch} from "vue-property-decorator";
+import {Component, Prop, Ref, Watch} from "vue-property-decorator";
 import {ContentModel, EditorStates} from "@/types/VueuvTypes";
 import ContentStyle from "@/components/ContentStyle.vue";
 import ContentRepository from "@/components/ContentRepository.vue";
-
+import Vue from "vue";
 @Component({
   name: "VueuvEditor",
   components: {ContentRepository, InnerFrame, Document, TemplateSaver, Menubar, Helper},

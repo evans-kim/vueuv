@@ -42,7 +42,7 @@
                 {{ yesButton }}
               </button>
               <button v-if="noButton" type="button" @click.stop="hide"
-                      class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                      class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                 {{ noButton }}
               </button>
             </slot>
@@ -72,6 +72,37 @@ const ModalProps = Vue.extend({
 
 @Component
 export default class Modal extends ModalProps {
+
+  get getColors(){
+    switch (this.color) {
+      default:
+        return ['bg-green-100',
+        'text-green-600',
+        'bg-green-600',
+        'hover:bg-green-700',
+        'focus:ring-green-500'];
+      case 'red':
+        return ['bg-red-100',
+          'text-red-600',
+          'bg-red-600',
+          'hover:bg-red-700',
+          'focus:ring-red-500'];
+      case 'yellow':
+        return ['bg-yellow-100',
+          'text-yellow-600',
+          'bg-yellow-600',
+          'hover:bg-yellow-700',
+          'focus:ring-yellow-500'];
+      case 'blue':
+        return ['bg-blue-100',
+          'text-blue-600',
+          'bg-blue-600',
+          'hover:bg-blue-700',
+          'focus:ring-blue-500'];
+    }
+
+  }
+
   exec() {
     this.$emit('success', true);
     this.$emit('update:visible', false);

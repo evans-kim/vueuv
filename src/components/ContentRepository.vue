@@ -117,11 +117,20 @@ export default class ContentRepository extends Vue{
     this.$delete(arr, fromIndex)
     arr.splice(toIndex, 0, item);
   }
-
+  refreshId(content: ContentModel){
+    content.id = this.createUid();
+    if(!content.contents){
+      return;
+    }
+    content.contents.map((child)=>{
+      this.refreshId(child)
+    })
+  }
   makeClone(model: ContentModel){
 
     const content = cloneDeep(model);
-    content.id = this.createUid();
+    this.refreshId(content);
+
     return this.factory(content);
   }
 

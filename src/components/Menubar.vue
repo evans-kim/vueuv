@@ -59,8 +59,9 @@ import cloneDeep from "lodash/cloneDeep"
 import SortableContent, {SortableVue} from "@/lib/SortableContent";
 import LocalStore from "@/lib/LocalStore";
 import ToggleGroup from "@/components/ToggleGroup.vue";
-import {Component, Inject, Ref, Vue} from "vue-property-decorator";
+import {Component, Inject, Ref} from "vue-property-decorator";
 import VueuvEditor from "@/components/VueuvEditor.vue";
+import Vue from "vue";
 
 @Component({
   name: "Menubar",
@@ -151,6 +152,7 @@ export default class Menubar extends Vue {
 
 
   deleteTemplate(template) {
+
     Vue.$vueuvModal.show({
       color: 'yellow',
       title: '템플릿 삭제',

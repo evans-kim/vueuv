@@ -12,8 +12,8 @@
       </label>
 
       <label class="flex items-center">
-          <input id="remember_me" v-model="isCopyCss" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-          <label for="remember_me"  class="ml-2 block text-sm text-gray-900">
+          <input v-model="isCopyCss" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+          <label class="ml-2 block text-sm text-gray-900">
             CSS 전체를 복사
           </label>
         </label>
